@@ -97,6 +97,7 @@ app.get("/health", (req, res) => {
     status: "ok"
   });
 });
+message: "WebClient Hunter AI Backend is running v2"
 // ===== START =====
 app.listen(PORT, () => {
   console.log(`\n🚀 WebClient Hunter AI Backend`);
