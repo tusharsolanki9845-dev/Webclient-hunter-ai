@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRM Pipeline – WebClient Hunter AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a href="index.html" class="sidebar-brand"><div class="nav-logo-icon">🎯</div> WC Hunter AI</a>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <a href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+      <a href="search.html"><span class="nav-icon">🔍</span> Find Leads</a>
+      <a href="reports.html"><span class="nav-icon">📊</span> Run Audit</a>
+      <a href="crm.html" class="active"><span class="nav-icon">📋</span> CRM Pipeline</a>
+      <div class="sidebar-section-label">Account</div>
+      <a href="settings.html"><span class="nav-icon">⚙️</span> Settings</a>
+    </nav>
+    <div class="sidebar-upgrade">
+      <div class="sidebar-upgrade-label">Pro Plan</div>
+      <div class="sidebar-upgrade-sub">87 / 200 audits used</div>
+      <div class="sidebar-upgrade-bar"><div class="sidebar-upgrade-bar-fill" style="width:43%"></div></div>
+      <a href="settings.html" class="btn btn-primary btn-sm" style="width:100%;justify-content:center">Upgrade</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar">AJ</div>
+        <div><div class="sidebar-user-name">Alex Johnson</div><div class="sidebar-user-plan">Pro Plan</div></div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+        <span class="topbar-title">CRM Pipeline</span>
+      </div>
+      <div class="topbar-right">
+        <button class="dark-toggle" aria-label="Toggle theme">🌙</button>
+        <a href="search.html" class="btn btn-primary btn-sm">+ Add Leads</a>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <!-- Stats -->
+      <div class="stats-grid" style="margin-bottom:20px">
+        <div class="glass-card stat-card">
+          <div class="stat-card-icon blue">🎯</div>
+          <div class="stat-value" id="crm-stat-total">—</div>
+          <div class="stat-label">Total Leads</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-card-icon yellow">📧</div>
+          <div class="stat-value" id="crm-stat-contacted">—</div>
+          <div class="stat-label">Contacted</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-card-icon purple">📋</div>
+          <div class="stat-value" id="crm-stat-proposal">—</div>
+          <div class="stat-label">In Proposal</div>
+        </div>
+        <div class="glass-card stat-card">
+          <div class="stat-card-icon green">✅</div>
+          <div class="stat-value" id="crm-stat-won">—</div>
+          <div class="stat-label">Won</div>
+        </div>
+      </div>
+
+      <!-- Filters + Search -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+        <div class="crm-filters" role="group" aria-label="Filter by status">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="new">New</button>
+          <button class="filter-btn" data-filter="contacted">Contacted</button>
+          <button class="filter-btn" data-filter="interested">Interested</button>
+          <button class="filter-btn" data-filter="proposal">Proposal</button>
+          <button class="filter-btn" data-filter="won">Won ✓</button>
+          <button class="filter-btn" data-filter="lost">Lost</button>
+        </div>
+        <div class="crm-search-wrap">
+          <input type="search" class="form-input" id="crm-search-input"
+            placeholder="Search leads…" style="max-width:200px" aria-label="Search leads">
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-container">
+        <div style="overflow-x:auto">
+          <table aria-label="CRM lead pipeline">
+            <thead>
+              <tr>
+                <th>Business</th>
+                <th>Niche</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Notes</th>
+                <th>SEO Score</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="crm-table-body">
+              <tr><td colspan="7"><div class="loading-row"><span class="spinner"></span></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="edit-modal-title">Edit Lead</h3>
+      <button class="modal-close" id="modal-cancel-btn" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="form-group">
+          <label for="edit-name">Business Name</label>
+          <input type="text" class="form-input" id="edit-name" placeholder="Business name">
+        </div>
+        <div class="form-group">
+          <label for="edit-status">Status</label>
+          <select class="form-select" id="edit-status">
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="interested">Interested</option>
+            <option value="proposal">Proposal Sent</option>
+            <option value="won">Won</option>
+            <option value="lost">Lost</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="edit-notes">Notes</label>
+          <textarea class="form-textarea" id="edit-notes" placeholder="Add notes…"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="modal-cancel-btn2" onclick="document.getElementById('edit-modal').classList.remove('open')">Cancel</button>
+      <button class="btn btn-primary" id="modal-save-btn">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" aria-live="polite"></div>
+<script src="js/main.js"></script>
+</body>
+</html>

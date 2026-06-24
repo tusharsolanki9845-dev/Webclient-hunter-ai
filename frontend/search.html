@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Find Leads – WebClient Hunter AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a href="index.html" class="sidebar-brand"><div class="nav-logo-icon">🎯</div> WC Hunter AI</a>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <a href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+      <a href="search.html" class="active"><span class="nav-icon">🔍</span> Find Leads</a>
+      <a href="reports.html"><span class="nav-icon">📊</span> Run Audit</a>
+      <a href="crm.html"><span class="nav-icon">📋</span> CRM Pipeline</a>
+      <div class="sidebar-section-label">Account</div>
+      <a href="settings.html"><span class="nav-icon">⚙️</span> Settings</a>
+    </nav>
+    <div class="sidebar-upgrade">
+      <div class="sidebar-upgrade-label">Pro Plan</div>
+      <div class="sidebar-upgrade-sub">87 / 200 audits used</div>
+      <div class="sidebar-upgrade-bar"><div class="sidebar-upgrade-bar-fill" style="width:43%"></div></div>
+      <a href="settings.html" class="btn btn-primary btn-sm" style="width:100%;justify-content:center">Upgrade</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar">AJ</div>
+        <div><div class="sidebar-user-name">Alex Johnson</div><div class="sidebar-user-plan">Pro Plan</div></div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+        <span class="topbar-title">Find Leads</span>
+      </div>
+      <div class="topbar-right">
+        <button class="dark-toggle" aria-label="Toggle theme">🌙</button>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="page-header-row">
+        <div class="page-header">
+          <h1>Find Leads</h1>
+          <p>Search businesses by niche and location. Save the ones with the worst websites.</p>
+        </div>
+        <a href="crm.html" class="btn btn-secondary btn-sm">📋 View CRM</a>
+      </div>
+
+      <!-- SEARCH FORM -->
+      <div class="glass-card search-box-wrap fade-in">
+        <form id="search-form" novalidate>
+          <div class="search-grid">
+            <div class="form-group">
+              <label for="niche-input">Business Niche</label>
+              <input type="text" id="niche-input" class="form-input" placeholder="e.g. Plumbing, Restaurant, Gym…">
+            </div>
+            <div class="form-group">
+              <label for="location-input">Location</label>
+              <input type="text" id="location-input" class="form-input" placeholder="e.g. Chicago, IL">
+            </div>
+            <button type="submit" class="btn btn-primary" id="search-btn">🔍 Search</button>
+          </div>
+        </form>
+
+        <!-- Quick filters -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;align-items:center">
+          <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gray-400)">Quick:</span>
+          <button class="filter-tab" onclick="quickSearch('Plumbing','')">🔧 Plumbing</button>
+          <button class="filter-tab" onclick="quickSearch('Restaurant','Austin TX')">🍕 Restaurant</button>
+          <button class="filter-tab" onclick="quickSearch('Gym','')">💪 Gym</button>
+          <button class="filter-tab" onclick="quickSearch('Dentist','')">🦷 Dentist</button>
+          <button class="filter-tab" onclick="quickSearch('Law Firm','')">⚖️ Law Firm</button>
+          <button class="filter-tab" onclick="quickSearch('Salon','')">💇 Salon</button>
+          <button class="filter-tab" onclick="quickSearch('Auto Repair','')">🚗 Auto Repair</button>
+        </div>
+      </div>
+
+      <!-- RESULTS HEADER -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <span style="font-size:.85rem;font-weight:600;color:var(--gray-600)" id="results-count">10 results</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label for="sort-select" style="font-size:.78rem;color:var(--gray-500)">Sort:</label>
+          <select id="sort-select" class="form-select" style="width:auto;padding:6px 10px;font-size:.8rem">
+            <option value="">Default</option>
+            <option value="worst-seo">Worst SEO first</option>
+            <option value="worst-speed">Worst Speed first</option>
+            <option value="worst-mobile">Worst Mobile first</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- LEADS GRID -->
+      <div class="leads-grid" id="leads-container"></div>
+
+    </main>
+  </div>
+</div>
+
+<div class="toast-container" aria-live="polite"></div>
+<script src="js/main.js"></script>
+</body>
+</html>

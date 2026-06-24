@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings – WebClient Hunter AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a href="index.html" class="sidebar-brand"><div class="nav-logo-icon">🎯</div> WC Hunter AI</a>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <a href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+      <a href="search.html"><span class="nav-icon">🔍</span> Find Leads</a>
+      <a href="reports.html"><span class="nav-icon">📊</span> Run Audit</a>
+      <a href="crm.html"><span class="nav-icon">📋</span> CRM Pipeline</a>
+      <div class="sidebar-section-label">Account</div>
+      <a href="settings.html" class="active"><span class="nav-icon">⚙️</span> Settings</a>
+    </nav>
+    <div class="sidebar-upgrade">
+      <div class="sidebar-upgrade-label">Pro Plan</div>
+      <div class="sidebar-upgrade-sub">87 / 200 audits used</div>
+      <div class="sidebar-upgrade-bar"><div class="sidebar-upgrade-bar-fill" style="width:43%"></div></div>
+      <a href="settings.html" class="btn btn-primary btn-sm" style="width:100%;justify-content:center">Upgrade</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar">AJ</div>
+        <div><div class="sidebar-user-name">Alex Johnson</div><div class="sidebar-user-plan">Pro Plan</div></div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+        <span class="topbar-title">Settings</span>
+      </div>
+      <div class="topbar-right">
+        <button class="dark-toggle" aria-label="Toggle theme">🌙</button>
+      </div>
+    </header>
+
+    <main class="page-content" id="settings-content">
+      <div class="settings-layout">
+
+        <!-- Settings Nav -->
+        <nav class="settings-nav" aria-label="Settings sections">
+          <button class="settings-nav-item active" data-panel="panel-profile">👤 Profile</button>
+          <button class="settings-nav-item" data-panel="panel-api">🔑 API Keys</button>
+          <button class="settings-nav-item" data-panel="panel-appearance">🎨 Appearance</button>
+          <button class="settings-nav-item" data-panel="panel-notifications">🔔 Notifications</button>
+          <button class="settings-nav-item" data-panel="panel-billing">💳 Billing</button>
+          <button class="settings-nav-item" data-panel="panel-danger" style="color:var(--red-500)">⚠️ Danger Zone</button>
+        </nav>
+
+        <!-- Panels -->
+        <div>
+
+          <!-- PROFILE -->
+          <section class="glass-card settings-panel active" id="panel-profile" style="padding:24px">
+            <div class="settings-section">
+              <div class="settings-section-title">Profile Settings</div>
+              <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+                <div class="avatar" style="width:64px;height:64px;font-size:1.4rem">AJ</div>
+                <div>
+                  <div style="font-weight:700;color:var(--gray-900);margin-bottom:2px">Alex Johnson</div>
+                  <div style="font-size:.78rem;color:var(--gray-400)">Pro Plan · Member since Jan 2024</div>
+                  <button class="btn btn-secondary btn-sm" style="margin-top:8px">Change Avatar</button>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="s-name">Full Name</label>
+                    <input type="text" class="form-input" id="s-name" value="Alex Johnson">
+                  </div>
+                  <div class="form-group">
+                    <label for="s-email">Email</label>
+                    <input type="email" class="form-input" id="s-email" value="alex@example.com">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="s-company">Company / Agency</label>
+                    <input type="text" class="form-input" id="s-company" value="My Agency">
+                  </div>
+                  <div class="form-group">
+                    <label for="s-website">Your Website</label>
+                    <input type="url" class="form-input" id="s-website" placeholder="https://youragency.com">
+                  </div>
+                </div>
+                <button class="btn btn-primary" id="save-profile-btn" style="align-self:flex-start">Save Profile</button>
+              </div>
+            </div>
+            <div class="settings-section">
+              <div class="settings-section-title">Change Password</div>
+              <div style="display:flex;flex-direction:column;gap:12px;max-width:360px">
+                <div class="form-group">
+                  <label for="s-current-pw">Current Password</label>
+                  <input type="password" class="form-input" id="s-current-pw" placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                  <label for="s-new-pw">New Password</label>
+                  <input type="password" class="form-input" id="s-new-pw" placeholder="••••••••">
+                </div>
+                <button class="btn btn-secondary" style="align-self:flex-start"
+                  onclick="Toast.info('Feature coming soon')">Update Password</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- API KEYS -->
+          <section class="glass-card settings-panel" id="panel-api" style="padding:24px">
+            <div class="settings-section">
+              <div class="settings-section-title">API Configuration</div>
+              <p style="font-size:.85rem;margin-bottom:18px">Connect your API keys to enable AI-powered audits and outreach generation.</p>
+              <div style="display:flex;flex-direction:column;gap:16px">
+                <div class="form-group">
+                  <label for="openai-key">OpenAI API Key</label>
+                  <div class="api-key-field">
+                    <input type="password" class="form-input" id="openai-key" value="sk-••••••••••••••••••••••" autocomplete="off">
+                    <button class="api-key-toggle" aria-label="Show/hide">👁️</button>
+                  </div>
+                  <span style="font-size:.72rem;color:var(--gray-400)">Used for AI audit analysis &amp; outreach.
+                    <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">Get your key →</a></span>
+                </div>
+                <div class="form-group">
+                  <label for="supabase-url">Supabase Project URL</label>
+                  <input type="url" class="form-input" id="supabase-url" placeholder="https://xxxx.supabase.co">
+                </div>
+                <div class="form-group">
+                  <label for="supabase-key">Supabase Anon Key</label>
+                  <div class="api-key-field">
+                    <input type="password" class="form-input" id="supabase-key" placeholder="eyJhbGciOiJIUzI1NiIs…" autocomplete="off">
+                    <button class="api-key-toggle" aria-label="Show/hide">👁️</button>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="backend-url">Backend API URL</label>
+                  <input type="url" class="form-input" id="backend-url" placeholder="https://your-backend.render.com">
+                  <span style="font-size:.72rem;color:var(--gray-400)">Your deployed Express backend URL</span>
+                </div>
+                <div style="display:flex;gap:10px">
+                  <button class="btn btn-primary" id="save-api-btn">Save API Settings</button>
+                  <button class="btn btn-secondary" id="test-api-btn">🔌 Test Connections</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- APPEARANCE -->
+          <section class="glass-card settings-panel" id="panel-appearance" style="padding:24px">
+            <div class="settings-section">
+              <div class="settings-section-title">Appearance</div>
+              <div class="toggle-row">
+                <div class="toggle-info"><h4>Dark Mode</h4><p>Switch between dark and light themes</p></div>
+                <label class="toggle"><input type="checkbox" id="dark-mode-toggle"><span class="toggle-slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info"><h4>Compact Sidebar</h4><p>Show icons only in the sidebar</p></div>
+                <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info"><h4>Animations</h4><p>Enable smooth transitions and animations</p></div>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+              </div>
+            </div>
+          </section>
+
+          <!-- NOTIFICATIONS -->
+          <section class="glass-card settings-panel" id="panel-notifications" style="padding:24px">
+            <div class="settings-section">
+              <div class="settings-section-title">Email Notifications</div>
+              <div class="toggle-row">
+                <div class="toggle-info"><h4>Weekly Lead Digest</h4><p>Summary of new leads in your target niches</p></div>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info"><h4>New Lead Alerts</h4><p>Get notified when high-scoring leads are discovered</p></div>
+                <label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info"><h4>CRM Follow-up Reminders</h4><p>Reminders for leads that need follow-up</p></div>
+                <label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label>
+              </div>
+              <div style="margin-top:18px">
+                <button class="btn btn-primary" onclick="Toast.success('Notification preferences saved')">Save Preferences</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- BILLING -->
+          <section class="glass-card settings-panel" id="panel-billing" style="padding:24px">
+            <div class="settings-section">
+              <div class="settings-section-title">Billing &amp; Plan</div>
+              <div style="background:var(--gradient-subtle);border:1px solid var(--blue-100);border-radius:var(--radius-md);padding:18px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+                <div>
+                  <div style="font-weight:700;color:var(--gray-900);font-size:1rem">Pro Plan</div>
+                  <div style="font-size:.8rem;color:var(--gray-500);margin-top:3px">$79/month · Renews Feb 15, 2025</div>
+                </div>
+                <span class="badge badge-green">Active</span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+                <div class="glass-card" style="padding:14px;border-radius:var(--radius-md)">
+                  <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--gray-400);margin-bottom:4px">Audits Used</div>
+                  <div style="font-size:1.4rem;font-weight:800;color:var(--gray-900)">87 <span style="font-size:.82rem;font-weight:400;color:var(--gray-400)">/ 200</span></div>
+                  <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" data-score="43" style="width:0%"></div></div>
+                </div>
+                <div class="glass-card" style="padding:14px;border-radius:var(--radius-md)">
+                  <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--gray-400);margin-bottom:4px">Leads Saved</div>
+                  <div style="font-size:1.4rem;font-weight:800;color:var(--gray-900)">142 <span style="font-size:.82rem;font-weight:400;color:var(--gray-400)">unlimited</span></div>
+                  <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" data-score="100" style="width:0%"></div></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:10px">
+                <button class="btn btn-primary" onclick="Toast.info('Redirecting to billing portal…')">Manage Billing</button>
+                <button class="btn btn-secondary" onclick="Toast.info('Contact sales@wchai.com for Agency plan')">Upgrade Plan</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- DANGER ZONE -->
+          <section class="glass-card settings-panel" id="panel-danger" style="padding:24px;border-color:rgba(239,68,68,.25)">
+            <div class="settings-section">
+              <div class="settings-section-title" style="color:var(--red-500)">Danger Zone</div>
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--red-50);border:1px solid rgba(239,68,68,.2);border-radius:var(--radius-md);flex-wrap:wrap;gap:10px">
+                  <div>
+                    <div style="font-weight:600;color:var(--gray-900);font-size:.875rem">Clear All Saved Leads</div>
+                    <div style="font-size:.78rem;color:var(--gray-500);margin-top:2px">Remove all leads from local storage</div>
+                  </div>
+                  <button class="btn btn-danger btn-sm"
+                    onclick="if(confirm('Delete all leads? This cannot be undone.')){localStorage.removeItem('wcha-leads');Toast.warning('All leads cleared')}">
+                    Clear Leads
+                  </button>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:14px;background:var(--red-50);border:1px solid rgba(239,68,68,.2);border-radius:var(--radius-md);flex-wrap:wrap;gap:10px">
+                  <div>
+                    <div style="font-weight:600;color:var(--gray-900);font-size:.875rem">Delete Account</div>
+                    <div style="font-size:.78rem;color:var(--gray-500);margin-top:2px">Permanently delete your account and all data</div>
+                  </div>
+                  <button class="btn btn-danger btn-sm"
+                    onclick="Toast.warning('Please contact support@wchai.com to delete your account')">
+                    Delete Account
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="toast-container" aria-live="polite"></div>
+<script src="js/main.js"></script>
+</body>
+</html>

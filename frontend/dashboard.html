@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – WebClient Hunter AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a href="index.html" class="sidebar-brand">
+      <div class="nav-logo-icon">🎯</div> WC Hunter AI
+    </a>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <a href="dashboard.html" class="active"><span class="nav-icon">🏠</span> Dashboard</a>
+      <a href="search.html"><span class="nav-icon">🔍</span> Find Leads</a>
+      <a href="reports.html"><span class="nav-icon">📊</span> Run Audit</a>
+      <a href="crm.html"><span class="nav-icon">📋</span> CRM Pipeline</a>
+      <div class="sidebar-section-label">Account</div>
+      <a href="settings.html"><span class="nav-icon">⚙️</span> Settings</a>
+    </nav>
+    <div class="sidebar-upgrade">
+      <div class="sidebar-upgrade-label">Pro Plan</div>
+      <div class="sidebar-upgrade-sub">87 / 200 audits used</div>
+      <div class="sidebar-upgrade-bar"><div class="sidebar-upgrade-bar-fill" style="width:43%"></div></div>
+      <a href="settings.html" class="btn btn-primary btn-sm" style="width:100%;justify-content:center">Upgrade</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar">AJ</div>
+        <div>
+          <div class="sidebar-user-name">Alex Johnson</div>
+          <div class="sidebar-user-plan">Pro Plan</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+        <span class="topbar-title">Dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <button class="dark-toggle" aria-label="Toggle theme">🌙</button>
+        <a href="search.html" class="btn btn-primary btn-sm">+ Find Leads</a>
+      </div>
+    </header>
+
+    <main class="page-content">
+
+      <!-- Welcome -->
+      <div class="page-header-row">
+        <div class="page-header">
+          <h1>Good morning, Alex 👋</h1>
+          <p>Here's your lead pipeline overview for today.</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a href="search.html" class="btn btn-secondary btn-sm">🔍 Search Leads</a>
+          <a href="reports.html" class="btn btn-primary btn-sm">📊 Run Audit</a>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="glass-card stat-card fade-in">
+          <div class="stat-card-icon blue">🎯</div>
+          <div class="stat-value" id="stat-leads">—</div>
+          <div class="stat-label">Total Leads</div>
+          <div class="stat-change up">↑ 12 this week</div>
+        </div>
+        <div class="glass-card stat-card fade-in delay-1">
+          <div class="stat-card-icon yellow">📧</div>
+          <div class="stat-value" id="stat-contacted">—</div>
+          <div class="stat-label">Contacted</div>
+          <div class="stat-change up">↑ 3 this week</div>
+        </div>
+        <div class="glass-card stat-card fade-in delay-2">
+          <div class="stat-card-icon purple">📋</div>
+          <div class="stat-value" id="stat-audits">—</div>
+          <div class="stat-label">Audits Run</div>
+          <div class="stat-change up">↑ 8 this week</div>
+        </div>
+        <div class="glass-card stat-card fade-in delay-3">
+          <div class="stat-card-icon green">💰</div>
+          <div class="stat-value" id="stat-revenue">—</div>
+          <div class="stat-label">Pipeline Value</div>
+          <div class="stat-change up">↑ 18% this month</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <h3 style="margin-bottom:14px;font-size:.95rem;color:var(--gray-700)">Quick Actions</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:28px">
+        <a href="search.html" class="quick-action-card">
+          <div class="quick-action-icon blue">🔍</div>
+          <div><div class="quick-action-title">Search Leads</div><div class="quick-action-sub">Find businesses by niche</div></div>
+        </a>
+        <a href="reports.html" class="quick-action-card">
+          <div class="quick-action-icon purple">📊</div>
+          <div><div class="quick-action-title">Run Website Audit</div><div class="quick-action-sub">Analyze any website instantly</div></div>
+        </a>
+        <a href="crm.html" class="quick-action-card">
+          <div class="quick-action-icon green">📋</div>
+          <div><div class="quick-action-title">Manage Pipeline</div><div class="quick-action-sub">Update your CRM leads</div></div>
+        </a>
+        <a href="settings.html" class="quick-action-card">
+          <div class="quick-action-icon yellow">⚙️</div>
+          <div><div class="quick-action-title">Settings</div><div class="quick-action-sub">API keys &amp; profile</div></div>
+        </a>
+      </div>
+
+      <!-- Recent Leads -->
+      <div class="table-container">
+        <div class="table-header">
+          <span class="table-title">Recent Leads</span>
+          <a href="crm.html" class="btn btn-secondary btn-sm">View All →</a>
+        </div>
+        <div style="overflow-x:auto">
+          <table aria-label="Recent leads">
+            <thead>
+              <tr>
+                <th>Business</th>
+                <th>Niche</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Added</th>
+              </tr>
+            </thead>
+            <tbody id="recent-leads-list">
+              <tr><td colspan="5"><div class="loading-row"><span class="spinner"></span></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div><!-- /main-content -->
+</div><!-- /app-layout -->
+
+<div class="toast-container" aria-live="polite"></div>
+<script src="js/main.js"></script>
+</body>
+</html>

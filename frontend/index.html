@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebClient Hunter AI – Find Clients Who Need Better Websites</title>
+  <meta name="description" content="AI-powered platform that helps freelancers and agencies find businesses with poor websites, audit them instantly, and generate outreach that converts.">
+  <meta property="og:title" content="WebClient Hunter AI">
+  <meta property="og:description" content="Find businesses that need website improvements. AI-powered lead generation for web professionals.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="container">
+    <div class="navbar-inner">
+      <a href="index.html" class="nav-logo">
+        <div class="nav-logo-icon">🎯</div>
+        WebClient Hunter AI
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="dashboard.html">Dashboard</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="dark-toggle" aria-label="Toggle dark mode">🌙</button>
+        <a href="dashboard.html" class="btn btn-secondary btn-sm">Sign In</a>
+        <a href="dashboard.html" class="btn btn-gradient btn-sm">Start Free →</a>
+        <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- MOBILE NAV -->
+<nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
+  <button class="mobile-nav-close" aria-label="Close menu">✕</button>
+  <a href="#features" onclick="document.getElementById('mobile-nav').classList.remove('open')">Features</a>
+  <a href="#how-it-works" onclick="document.getElementById('mobile-nav').classList.remove('open')">How It Works</a>
+  <a href="#pricing" onclick="document.getElementById('mobile-nav').classList.remove('open')">Pricing</a>
+  <div class="mobile-nav-divider"></div>
+  <a href="dashboard.html">Dashboard Demo</a>
+  <a href="search.html">Search Leads</a>
+  <div class="mobile-nav-divider"></div>
+  <a href="dashboard.html" class="btn btn-gradient" style="text-align:center;margin-top:8px">Start Free →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero" aria-labelledby="hero-heading">
+  <div class="hero-bg" aria-hidden="true">
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    <div class="hero-orb hero-orb-3"></div>
+  </div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-badge fade-in"><span class="hero-badge-dot"></span> AI-Powered Lead Generation</div>
+      <h1 id="hero-heading" class="fade-in delay-1">
+        Find Clients Who Need<br><span class="gradient-text">Better Websites</span> Right Now
+      </h1>
+      <p class="hero-desc fade-in delay-2">Stop cold outreach with no data. Hunt businesses with broken websites, audit them in seconds, and send personalized pitches that actually convert.</p>
+      <div class="hero-cta fade-in delay-3">
+        <a href="dashboard.html" class="btn btn-gradient btn-lg">Start Hunting Free →</a>
+        <a href="search.html" class="btn btn-secondary btn-lg">See Live Demo</a>
+      </div>
+      <div class="hero-stats fade-in delay-3">
+        <div class="hero-stat"><div class="hero-stat-num">12,400+</div><div class="hero-stat-label">Businesses Analyzed</div></div>
+        <div class="hero-stat"><div class="hero-stat-num">3.2×</div><div class="hero-stat-label">More Conversions</div></div>
+        <div class="hero-stat"><div class="hero-stat-num">94%</div><div class="hero-stat-label">Satisfaction Rate</div></div>
+        <div class="hero-stat"><div class="hero-stat-num">48h</div><div class="hero-stat-label">Avg. to First Client</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features" aria-labelledby="features-heading">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow">Features</span>
+      <h2 id="features-heading">Everything You Need to <span class="gradient-text">Win More Clients</span></h2>
+      <p>From finding leads to closing deals — the complete toolkit for web professionals who want to grow faster.</p>
+    </div>
+    <div class="features-grid">
+      <div class="glass-card feature-card fade-in">
+        <div class="feature-icon blue">🔍</div>
+        <h3>Smart Business Discovery</h3>
+        <p>Search businesses by niche and location. Filter by SEO problems, speed issues, or mobile gaps. Find your ideal clients instantly.</p>
+      </div>
+      <div class="glass-card feature-card fade-in delay-1">
+        <div class="feature-icon purple">⚡</div>
+        <h3>Instant Website Audits</h3>
+        <p>AI-powered audits analyzing SEO, page speed, mobile-friendliness, and security in seconds. Get a full report with prioritized fixes.</p>
+      </div>
+      <div class="glass-card feature-card fade-in delay-2">
+        <div class="feature-icon green">🤖</div>
+        <h3>AI Outreach Generator</h3>
+        <p>Generate personalized cold emails referencing each site's specific issues. Higher reply rates because you lead with real value.</p>
+      </div>
+      <div class="glass-card feature-card fade-in">
+        <div class="feature-icon yellow">📊</div>
+        <h3>Built-in CRM</h3>
+        <p>Manage your pipeline from first contact to signed deal. Track status, add notes, and never let a hot lead go cold.</p>
+      </div>
+      <div class="glass-card feature-card fade-in delay-1">
+        <div class="feature-icon blue">📈</div>
+        <h3>Performance Dashboard</h3>
+        <p>See all your leads, audits, and outreach in one clean view. Track pipeline value and conversion rates over time.</p>
+      </div>
+      <div class="glass-card feature-card fade-in delay-2">
+        <div class="feature-icon purple">🔒</div>
+        <h3>White-Label Reports</h3>
+        <p>Export branded audit reports to send directly to prospects. Professional PDFs that showcase exactly why they need you.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section section-alt" id="how-it-works" aria-labelledby="hiw-heading">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow">How It Works</span>
+      <h2 id="hiw-heading">From Search to <span class="gradient-text">Signed Contract</span> in 4 Steps</h2>
+      <p>A simple, repeatable system that turns website problems into profitable client relationships.</p>
+    </div>
+    <div class="steps-grid">
+      <div class="glass-card step-card fade-in"><div class="step-num">1</div><h3>Search & Discover</h3><p>Enter a niche and location. Surface businesses with low-scoring websites — your potential clients.</p></div>
+      <div class="glass-card step-card fade-in delay-1"><div class="step-num">2</div><h3>Audit Instantly</h3><p>Run a full AI audit in seconds — SEO, speed, mobile, security. Get a prioritized problem list.</p></div>
+      <div class="glass-card step-card fade-in delay-2"><div class="step-num">3</div><h3>Craft Outreach</h3><p>AI writes a personalized email referencing their exact issues. "Your site loads in 8s on mobile" beats generic emails every time.</p></div>
+      <div class="glass-card step-card fade-in delay-3"><div class="step-num">4</div><h3>Close & Manage</h3><p>Track replies in the built-in CRM. Move leads through your pipeline and convert them to paying clients.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing" aria-labelledby="pricing-heading">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-eyebrow">Pricing</span>
+      <h2 id="pricing-heading">Simple Pricing, <span class="gradient-text">Real ROI</span></h2>
+      <p>One new client pays for months of subscription. Most users close their first client within the first week.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="glass-card pricing-card fade-in">
+        <div class="pricing-plan">Starter</div>
+        <div class="pricing-price">$29<span>/mo</span></div>
+        <div class="pricing-desc">Perfect for solo freelancers</div>
+        <ul class="pricing-features">
+          <li><span class="check">✓</span> 100 lead searches/month</li>
+          <li><span class="check">✓</span> 25 website audits/month</li>
+          <li><span class="check">✓</span> AI outreach generator</li>
+          <li><span class="check">✓</span> Basic CRM</li>
+          <li><span class="check">✓</span> Email support</li>
+        </ul>
+        <a href="dashboard.html" class="btn btn-secondary" style="width:100%;justify-content:center">Get Started</a>
+      </div>
+      <div class="glass-card pricing-card featured fade-in delay-1">
+        <div class="pricing-popular"><span class="badge badge-blue">Most Popular</span></div>
+        <div class="pricing-plan">Pro</div>
+        <div class="pricing-price">$79<span>/mo</span></div>
+        <div class="pricing-desc">For agencies &amp; power users</div>
+        <ul class="pricing-features">
+          <li><span class="check">✓</span> Unlimited lead searches</li>
+          <li><span class="check">✓</span> 200 website audits/month</li>
+          <li><span class="check">✓</span> Advanced AI outreach</li>
+          <li><span class="check">✓</span> Full CRM + pipeline</li>
+          <li><span class="check">✓</span> White-label PDF reports</li>
+          <li><span class="check">✓</span> Priority support</li>
+        </ul>
+        <a href="dashboard.html" class="btn btn-gradient" style="width:100%;justify-content:center">Start Pro Trial →</a>
+      </div>
+      <div class="glass-card pricing-card fade-in delay-2">
+        <div class="pricing-plan">Agency</div>
+        <div class="pricing-price">$199<span>/mo</span></div>
+        <div class="pricing-desc">For teams that scale</div>
+        <ul class="pricing-features">
+          <li><span class="check">✓</span> Everything in Pro</li>
+          <li><span class="check">✓</span> Unlimited audits</li>
+          <li><span class="check">✓</span> Team collaboration</li>
+          <li><span class="check">✓</span> API access</li>
+          <li><span class="check">✓</span> Custom integrations</li>
+          <li><span class="check">✓</span> Dedicated account manager</li>
+        </ul>
+        <a href="dashboard.html" class="btn btn-secondary" style="width:100%;justify-content:center">Contact Sales</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section">
+  <div class="container">
+    <div class="cta-section">
+      <h2>Ready to Find Your <span style="opacity:.9">Next Client?</span></h2>
+      <p>Join 2,000+ web professionals who use WebClient Hunter AI to find high-value clients every week.</p>
+      <div class="cta-buttons">
+        <a href="dashboard.html" class="btn btn-white btn-lg">Start Free — No Credit Card →</a>
+        <a href="search.html" class="btn btn-outline-white btn-lg">See Live Demo</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-logo"><div class="nav-logo-icon">🎯</div>WebClient Hunter AI</a>
+        <p>The AI-powered platform that helps web professionals find, audit, and close more clients.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul class="footer-links">
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="search.html">Lead Search</a></li>
+          <li><a href="reports.html">Audit Reports</a></li>
+          <li><a href="crm.html">CRM</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul class="footer-links">
+          <li><a href="#">About</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <ul class="footer-links">
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Cookie Policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2024 WebClient Hunter AI. All rights reserved.</p>
+      <p>Built for freelancers and agencies who close.</p>
+    </div>
+  </div>
+</footer>
+
+<div class="toast-container" aria-live="polite"></div>
+<script src="js/main.js"></script>
+</body>
+</html>

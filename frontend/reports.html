@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Website Audit – WebClient Hunter AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <a href="index.html" class="sidebar-brand"><div class="nav-logo-icon">🎯</div> WC Hunter AI</a>
+    <nav class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <a href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
+      <a href="search.html"><span class="nav-icon">🔍</span> Find Leads</a>
+      <a href="reports.html" class="active"><span class="nav-icon">📊</span> Run Audit</a>
+      <a href="crm.html"><span class="nav-icon">📋</span> CRM Pipeline</a>
+      <div class="sidebar-section-label">Account</div>
+      <a href="settings.html"><span class="nav-icon">⚙️</span> Settings</a>
+    </nav>
+    <div class="sidebar-upgrade">
+      <div class="sidebar-upgrade-label">Pro Plan</div>
+      <div class="sidebar-upgrade-sub">87 / 200 audits used</div>
+      <div class="sidebar-upgrade-bar"><div class="sidebar-upgrade-bar-fill" style="width:43%"></div></div>
+      <a href="settings.html" class="btn btn-primary btn-sm" style="width:100%;justify-content:center">Upgrade</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="avatar">AJ</div>
+        <div><div class="sidebar-user-name">Alex Johnson</div><div class="sidebar-user-plan">Pro Plan</div></div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
+        <span class="topbar-title">Website Audit</span>
+      </div>
+      <div class="topbar-right">
+        <button class="dark-toggle" aria-label="Toggle theme">🌙</button>
+        <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Print</button>
+      </div>
+    </header>
+
+    <main class="page-content" id="report-section">
+
+      <!-- AUDIT FORM -->
+      <div class="glass-card fade-in" style="padding:20px;margin-bottom:20px">
+        <form id="audit-form" novalidate style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div class="form-group" style="flex:1;min-width:200px">
+            <label for="audit-url-input">Website URL</label>
+            <input type="url" id="audit-url-input" class="form-input"
+              placeholder="https://example-business.com"
+              value="https://example-restaurant.com">
+          </div>
+          <button type="submit" class="btn btn-primary" id="run-audit-btn">🔍 Run Audit</button>
+          <button type="button" class="btn btn-secondary" onclick="loadDemoReport()">👁️ Demo Report</button>
+        </form>
+      </div>
+
+      <!-- AUDIT HEADER CARD -->
+      <div class="audit-header fade-in">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:14px">
+          <div>
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;opacity:.7;margin-bottom:6px">AI Audit Report</div>
+            <h2 class="audit-business-name" style="color:#fff;margin-bottom:4px">Example Restaurant</h2>
+            <div class="audit-url">🌐 example-restaurant.com</div>
+            <div style="font-size:.78rem;opacity:.65;margin-top:6px">Audited on <span id="audit-date"></span></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start">
+            <button class="btn btn-white btn-sm" onclick="generateOutreach()">✉️ Generate Outreach</button>
+            <button class="btn btn-outline-white btn-sm" onclick="window.print()">🖨️ Print Report</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCORE RINGS -->
+      <div class="score-ring-grid">
+        <div class="glass-card score-ring-card fade-in">
+          <div class="score-circle poor" id="score-circle-seo">
+            <div class="score-num" id="score-seo">28</div>
+            <div class="score-pct">/100</div>
+          </div>
+          <h4>SEO Score</h4>
+          <p style="font-size:.72rem;color:var(--gray-400);margin-top:3px">Critical issues</p>
+        </div>
+        <div class="glass-card score-ring-card fade-in delay-1">
+          <div class="score-circle avg" id="score-circle-speed">
+            <div class="score-num" id="score-speed">42</div>
+            <div class="score-pct">/100</div>
+          </div>
+          <h4>Page Speed</h4>
+          <p style="font-size:.72rem;color:var(--gray-400);margin-top:3px">8.4s load time</p>
+        </div>
+        <div class="glass-card score-ring-card fade-in delay-2">
+          <div class="score-circle poor" id="score-circle-mobile">
+            <div class="score-num" id="score-mobile">35</div>
+            <div class="score-pct">/100</div>
+          </div>
+          <h4>Mobile Score</h4>
+          <p style="font-size:.72rem;color:var(--gray-400);margin-top:3px">Not responsive</p>
+        </div>
+        <div class="glass-card score-ring-card fade-in delay-1">
+          <div class="score-circle avg">
+            <div class="score-num">55</div>
+            <div class="score-pct">/100</div>
+          </div>
+          <h4>Accessibility</h4>
+          <p style="font-size:.72rem;color:var(--gray-400);margin-top:3px">WCAG AA failing</p>
+        </div>
+        <div class="glass-card score-ring-card fade-in delay-2">
+          <div class="score-circle poor">
+            <div class="score-num">40</div>
+            <div class="score-pct">/100</div>
+          </div>
+          <h4>Security</h4>
+          <p style="font-size:.72rem;color:var(--gray-400);margin-top:3px">Mixed content</p>
+        </div>
+      </div>
+
+      <!-- ISSUES + SUGGESTIONS -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px" class="issues-suggestions-grid">
+        <!-- Issues -->
+        <div>
+          <h3 style="margin-bottom:12px;font-size:.95rem">⚠️ Issues Found</h3>
+          <div class="issues-list">
+            <div class="issue-item">
+              <div class="issue-icon">🔍</div>
+              <div>
+                <div class="issue-title">Missing Meta Descriptions</div>
+                <div class="issue-desc">12 pages have no meta description, hurting click-through rates from search results.</div>
+                <span class="badge badge-red" style="margin-top:6px">Critical</span>
+              </div>
+            </div>
+            <div class="issue-item">
+              <div class="issue-icon">⚡</div>
+              <div>
+                <div class="issue-title">Slow Page Load — 8.4 seconds</div>
+                <div class="issue-desc">Google recommends under 2.5s. You're losing ~53% of mobile visitors before the page loads.</div>
+                <span class="badge badge-red" style="margin-top:6px">Critical</span>
+              </div>
+            </div>
+            <div class="issue-item">
+              <div class="issue-icon">📱</div>
+              <div>
+                <div class="issue-title">Not Mobile Responsive</div>
+                <div class="issue-desc">Layout breaks on screens under 768px. 60%+ of web traffic is now mobile.</div>
+                <span class="badge badge-yellow" style="margin-top:6px">High</span>
+              </div>
+            </div>
+            <div class="issue-item">
+              <div class="issue-icon">🖼️</div>
+              <div>
+                <div class="issue-title">Unoptimized Images (24 found)</div>
+                <div class="issue-desc">Could save 2.3MB and improve load time by 40% with WebP conversion and compression.</div>
+                <span class="badge badge-yellow" style="margin-top:6px">High</span>
+              </div>
+            </div>
+            <div class="issue-item">
+              <div class="issue-icon">🔒</div>
+              <div>
+                <div class="issue-title">Mixed Content Warning</div>
+                <div class="issue-desc">Some resources load over HTTP. Browsers show security warnings that scare visitors away.</div>
+                <span class="badge badge-gray" style="margin-top:6px">Medium</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Suggestions -->
+        <div>
+          <h3 style="margin-bottom:12px;font-size:.95rem">🤖 AI Recommendations</h3>
+          <div class="glass-card" style="padding:18px">
+            <div style="display:flex;flex-direction:column;gap:0">
+              <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+                <span style="background:var(--gradient-primary);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">1</span>
+                <span style="font-size:.85rem;color:var(--gray-600)">Add unique meta descriptions to all pages <strong style="color:var(--green-500)">(+10–20% CTR)</strong></span>
+              </div>
+              <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+                <span style="background:var(--gradient-primary);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">2</span>
+                <span style="font-size:.85rem;color:var(--gray-600)">Compress &amp; convert images to WebP format <strong style="color:var(--green-500)">(fastest speed win)</strong></span>
+              </div>
+              <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+                <span style="background:var(--gradient-primary);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">3</span>
+                <span style="font-size:.85rem;color:var(--gray-600)">Implement responsive CSS breakpoints for mobile layouts</span>
+              </div>
+              <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+                <span style="background:var(--gradient-primary);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">4</span>
+                <span style="font-size:.85rem;color:var(--gray-600)">Add LocalBusiness Schema.org markup for local SEO</span>
+              </div>
+              <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-100)">
+                <span style="background:var(--gradient-primary);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">5</span>
+                <span style="font-size:.85rem;color:var(--gray-600)">Create &amp; link Google Business Profile</span>
+              </div>
+              <div style="display:flex;gap:10px;padding:10px 0">
+                <span style="background:var(--gradient-primary);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0">6</span>
+                <span style="font-size:.85rem;color:var(--gray-600)">Add blog section to capture long-tail keyword traffic</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SCORE BREAKDOWN -->
+      <div class="glass-card fade-in" style="padding:22px;margin-bottom:16px">
+        <h3 style="margin-bottom:18px;font-size:.95rem">📊 Score Breakdown</h3>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="score-row">
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+              <span style="font-size:.85rem;font-weight:600;color:var(--gray-700)">SEO</span>
+              <span style="font-size:.82rem;color:var(--gray-400)" id="seo-label">28/100</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" data-score="28" data-key="seo" style="width:0%"></div></div>
+          </div>
+          <div class="score-row">
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+              <span style="font-size:.85rem;font-weight:600;color:var(--gray-700)">Page Speed</span>
+              <span style="font-size:.82rem;color:var(--gray-400)">42/100</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" data-score="42" style="width:0%"></div></div>
+          </div>
+          <div class="score-row">
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+              <span style="font-size:.85rem;font-weight:600;color:var(--gray-700)">Mobile Friendliness</span>
+              <span style="font-size:.82rem;color:var(--gray-400)">35/100</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" data-score="35" style="width:0%"></div></div>
+          </div>
+          <div class="score-row">
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+              <span style="font-size:.85rem;font-weight:600;color:var(--gray-700)">Accessibility</span>
+              <span style="font-size:.82rem;color:var(--gray-400)">55/100</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" data-score="55" style="width:0%"></div></div>
+          </div>
+          <div class="score-row">
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+              <span style="font-size:.85rem;font-weight:600;color:var(--gray-700)">Security</span>
+              <span style="font-size:.82rem;color:var(--gray-400)">40/100</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" data-score="40" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PITCH CTA -->
+      <div class="glass-card fade-in" style="padding:22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;background:var(--gradient-subtle);border-color:var(--blue-100)">
+        <div>
+          <h3 style="font-size:.95rem;margin-bottom:4px">Ready to pitch this business?</h3>
+          <p style="font-size:.83rem">Use this audit to generate a personalized cold email — referencing their exact problems.</p>
+        </div>
+        <button class="btn btn-primary" onclick="generateOutreach()">✉️ Generate Outreach Email</button>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- OUTREACH MODAL -->
+<div class="modal-overlay" id="outreach-modal" role="dialog" aria-modal="true" aria-labelledby="outreach-modal-title">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="outreach-modal-title">✉️ AI-Generated Outreach Email</h3>
+      <button class="modal-close" onclick="document.getElementById('outreach-modal').classList.remove('open')" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <pre id="outreach-text" style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:16px;font-size:.83rem;line-height:1.8;color:var(--gray-700);white-space:pre-wrap;font-family:inherit;margin:0">Subject: Quick question about your restaurant's website
+
+Hi there,
+
+I was looking up restaurants in your area and came across your website at example-restaurant.com.
+
+I ran a quick audit and noticed a few things that are likely costing you customers:
+
+• Your page takes 8+ seconds to load (most visitors leave after 3s)
+• The site isn't showing up for "restaurant near me" searches
+• It doesn't display correctly on mobile phones
+
+I put together a free detailed report showing exactly what's happening and how to fix it — happy to share it, no strings attached.
+
+Would it be helpful if I sent that over?
+
+Best,
+[Your Name]
+[Your Agency]</pre>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="document.getElementById('outreach-modal').classList.remove('open')">Close</button>
+      <button class="btn btn-primary" onclick="copyOutreach()">📋 Copy Email</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" aria-live="polite"></div>
+<script src="js/main.js"></script>
+<script>
+  // Close modal on overlay click
+  document.getElementById('outreach-modal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+  // Audit form submit
+  document.getElementById('audit-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const url = document.getElementById('audit-url-input').value.trim();
+    if (!url) { Toast.warning('Please enter a URL'); return; }
+    const btn = document.getElementById('run-audit-btn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Analyzing…';
+    Toast.info('Audit started', 'Analyzing ' + url);
+    setTimeout(() => {
+      btn.disabled = false; btn.textContent = '🔍 Run Audit';
+      Toast.success('Audit complete!', 'Report generated for ' + url);
+      animateProgressBars();
+    }, 2000);
+  });
+</script>
+</body>
+</html>
