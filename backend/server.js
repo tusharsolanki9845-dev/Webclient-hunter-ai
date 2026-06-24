@@ -85,6 +85,18 @@ app.get("/health", (req, res) => {
     service: "WebClient Hunter AI Backend"
   });
 });
+app.get("/", (req, res) => {
+  res.json({
+    status: "ok",
+    message: "WebClient Hunter AI Backend is running"
+  });
+});
+
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok"
+  });
+});
 // ===== START =====
 app.listen(PORT, () => {
   console.log(`\n🚀 WebClient Hunter AI Backend`);
