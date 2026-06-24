@@ -72,7 +72,19 @@ app.use((req, res) => {
 
 // ===== ERROR HANDLER =====
 app.use(errorHandler);
+app.get("/", (req, res) => {
+  res.json({
+    message: "WebClient Hunter AI Backend is running",
+    status: "ok"
+  });
+});
 
+app.get("/health", (req, res) => {
+  res.json({
+    status: "ok",
+    service: "WebClient Hunter AI Backend"
+  });
+});
 // ===== START =====
 app.listen(PORT, () => {
   console.log(`\n🚀 WebClient Hunter AI Backend`);
