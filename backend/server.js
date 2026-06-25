@@ -67,6 +67,7 @@ app.use('/api/outreach', outreachRoutes);
 
 const searchRoutes = require("./routes/search.routes");
 app.use("/api/search", searchRoutes);
+
 // ===== 404 =====
 app.use((req, res) => {
   res.status(404).json({ error: `Route ${req.method} ${req.path} not found` });
