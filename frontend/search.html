@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Find Leads – WebClient Hunter AI</title>
+  <title>Prospects – WebClient Hunter AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
@@ -12,107 +12,93 @@
 </head>
 <body>
 <div class="app-layout">
-
-  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <a href="index.html" class="sidebar-brand"><div class="nav-logo-icon">🎯</div> WC Hunter AI</a>
     <nav class="sidebar-nav">
       <div class="sidebar-section-label">Main</div>
       <a href="dashboard.html"><span class="nav-icon">🏠</span> Dashboard</a>
-      <a href="search.html" class="active"><span class="nav-icon">🔍</span> Find Leads</a>
+      <a href="search.html" class="active"><span class="nav-icon">🔎</span> Prospect List</a>
       <a href="reports.html"><span class="nav-icon">📊</span> Run Audit</a>
       <a href="crm.html"><span class="nav-icon">📋</span> CRM Pipeline</a>
       <div class="sidebar-section-label">Account</div>
       <a href="settings.html"><span class="nav-icon">⚙️</span> Settings</a>
     </nav>
     <div class="sidebar-upgrade">
-      <div class="sidebar-upgrade-label">Pro Plan</div>
-      <div class="sidebar-upgrade-sub">87 / 200 audits used</div>
-      <div class="sidebar-upgrade-bar"><div class="sidebar-upgrade-bar-fill" style="width:43%"></div></div>
-      <a href="settings.html" class="btn btn-primary btn-sm" style="width:100%;justify-content:center">Upgrade</a>
+      <div class="sidebar-upgrade-label">Prospecting workflow</div>
+      <div class="sidebar-upgrade-sub">Import → audit → qualify → outreach</div>
+      <a href="reports.html" class="btn btn-primary btn-sm" style="width:100%;justify-content:center">Run a website audit</a>
     </div>
     <div class="sidebar-footer">
       <div class="sidebar-user">
         <div class="avatar">AJ</div>
-        <div><div class="sidebar-user-name">Alex Johnson</div><div class="sidebar-user-plan">Pro Plan</div>
-        </div>
-        <button id="logout-btn" class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;justify-content:center" title="Sign out">Sign Out</div>
+        <div><div class="sidebar-user-name">Account</div><div class="sidebar-user-plan">Your workspace</div></div>
       </div>
+      <button id="logout-btn" class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;justify-content:center" title="Sign out">Sign Out</button>
     </div>
   </aside>
   <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-  <!-- MAIN -->
   <div class="main-content">
     <header class="topbar">
-      <div class="topbar-left">
-        <button class="sidebar-toggle" aria-label="Toggle sidebar">☰</button>
-        <span class="topbar-title">Find Leads</span>
-      </div>
-      <div class="topbar-right">
-        <button class="dark-toggle" aria-label="Toggle theme">🌙</button>
-      </div>
+      <div class="topbar-left"><button class="sidebar-toggle" aria-label="Toggle sidebar">☰</button><span class="topbar-title">Prospect List</span></div>
+      <div class="topbar-right"><button class="dark-toggle" aria-label="Toggle theme">🌙</button></div>
     </header>
 
     <main class="page-content">
       <div class="page-header-row">
         <div class="page-header">
-          <h1>Find Leads</h1>
-          <p>Search businesses by niche and location. Save the ones with the worst websites.</p>
+          <h1>Build your prospect list</h1>
+          <p>Start free: collect businesses from any public directory or your own research, then import their website links to audit and qualify the best opportunities.</p>
         </div>
-        <a href="crm.html" class="btn btn-secondary btn-sm">📋 View CRM</a>
+        <a href="crm.html" class="btn btn-secondary btn-sm">📋 Open CRM</a>
       </div>
 
-      <!-- SEARCH FORM -->
-      <div class="glass-card search-box-wrap fade-in">
-        <form id="search-form" novalidate>
-          <div class="search-grid">
-            <div class="form-group">
-              <label for="niche-input">Business Niche</label>
-              <input type="text" id="niche-input" class="form-input" placeholder="e.g. Plumbing, Restaurant, Gym…">
-            </div>
-            <div class="form-group">
-              <label for="location-input">Location</label>
-              <input type="text" id="location-input" class="form-input" placeholder="e.g. Chicago, IL">
-            </div>
-            <button type="submit" class="btn btn-primary" id="search-btn">🔍 Search</button>
+      <section class="glass-card import-workspace fade-in" aria-labelledby="import-title">
+        <div class="import-heading">
+          <div><span class="eyebrow">Zero-cost lead intake</span><h2 id="import-title">Import businesses you want to qualify</h2><p>Paste rows from a spreadsheet or business directory, or upload a CSV. No paid lead-search API is required.</p></div>
+          <button id="download-csv-template" type="button" class="btn btn-secondary btn-sm">⇩ Download CSV template</button>
+        </div>
+        <form id="lead-import-form" novalidate>
+          <div class="import-defaults">
+            <div class="form-group"><label for="import-niche">Default niche <span>(optional)</span></label><input id="import-niche" class="form-input" maxlength="100" placeholder="e.g. Restaurant"></div>
+            <div class="form-group"><label for="import-location">Default location <span>(optional)</span></label><input id="import-location" class="form-input" maxlength="200" placeholder="e.g. Greater Noida"></div>
+            <div class="form-group import-file-group"><label for="lead-csv-file">CSV or text file <span>(optional)</span></label><input id="lead-csv-file" class="form-input file-input" type="file" accept=".csv,.txt,text/csv,text/plain"></div>
           </div>
+          <div class="form-group">
+            <label for="lead-paste">Businesses to import</label>
+            <textarea id="lead-paste" class="form-input import-textarea" rows="7" placeholder="Business name | website | niche | location | notes&#10;Example Dental Clinic | https://exampledental.com | Dentist | Greater Noida | Found in local directory"></textarea>
+            <p class="input-help">Use a CSV file with headers <code>name,url,niche,location,notes</code>, or paste one business per line separated by <strong>|</strong>, commas, or tabs. A website is required because the next step is the website audit.</p>
+          </div>
+          <div class="import-actions"><button id="import-leads-btn" type="submit" class="btn btn-primary">＋ Import prospects to CRM</button><span id="import-status" class="import-status" aria-live="polite"></span></div>
         </form>
+      </section>
 
-        <!-- Quick filters -->
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;align-items:center">
-          <span style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--gray-400)">Quick:</span>
-          <button class="filter-tab" onclick="quickSearch('Plumbing','')">🔧 Plumbing</button>
-          <button class="filter-tab" onclick="quickSearch('Restaurant','Austin TX')">🍕 Restaurant</button>
-          <button class="filter-tab" onclick="quickSearch('Gym','')">💪 Gym</button>
-          <button class="filter-tab" onclick="quickSearch('Dentist','')">🦷 Dentist</button>
-          <button class="filter-tab" onclick="quickSearch('Law Firm','')">⚖️ Law Firm</button>
-          <button class="filter-tab" onclick="quickSearch('Salon','')">💇 Salon</button>
-          <button class="filter-tab" onclick="quickSearch('Auto Repair','')">🚗 Auto Repair</button>
+      <section class="workflow-strip" aria-label="How prospect qualification works">
+        <div><span class="workflow-number">1</span><strong>Collect</strong><span>Find business names and websites using free research.</span></div>
+        <div><span class="workflow-number">2</span><strong>Audit</strong><span>Run a real website check to identify weak sites.</span></div>
+        <div><span class="workflow-number">3</span><strong>Qualify</strong><span>Prioritize the lowest scores and useful findings.</span></div>
+        <div><span class="workflow-number">4</span><strong>Reach out</strong><span>Generate a tailored outreach draft from the audit.</span></div>
+      </section>
+
+      <section class="saved-leads-section" aria-labelledby="saved-leads-title">
+        <div class="section-heading-row"><div><span class="eyebrow">Your CRM</span><h2 id="saved-leads-title">Imported prospects and saved leads</h2><p>Filter your own records. This list never pretends to discover businesses automatically.</p></div></div>
+        <div class="glass-card search-box-wrap">
+          <form id="saved-filter-form" novalidate>
+            <div class="search-grid">
+              <div class="form-group"><label for="niche-input">Filter by niche</label><input type="text" id="niche-input" class="form-input" placeholder="e.g. Restaurant"></div>
+              <div class="form-group"><label for="location-input">Filter by location</label><input type="text" id="location-input" class="form-input" placeholder="e.g. Greater Noida"></div>
+              <button type="submit" class="btn btn-secondary" id="search-btn">Filter CRM</button>
+            </div>
+          </form>
+          <div class="quick-filters"><span>Quick filters:</span><button class="filter-tab" type="button" onclick="quickSearch('Plumbing','')">🔧 Plumbing</button><button class="filter-tab" type="button" onclick="quickSearch('Restaurant','')">🍕 Restaurant</button><button class="filter-tab" type="button" onclick="quickSearch('Gym','')">💪 Gym</button><button class="filter-tab" type="button" onclick="quickSearch('Dentist','')">🦷 Dentist</button><button class="filter-tab" type="button" onclick="quickSearch('Law Firm','')">⚖️ Law Firm</button><button class="filter-tab" type="button" onclick="quickSearch('Salon','')">💇 Salon</button></div>
         </div>
-      </div>
 
-      <!-- RESULTS HEADER -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-        <span style="font-size:.85rem;font-weight:600;color:var(--gray-600)" id="results-count">10 results</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <label for="sort-select" style="font-size:.78rem;color:var(--gray-500)">Sort:</label>
-          <select id="sort-select" class="form-select" style="width:auto;padding:6px 10px;font-size:.8rem">
-            <option value="">Default</option>
-            <option value="worst-seo">Worst SEO first</option>
-            <option value="worst-speed">Worst Speed first</option>
-            <option value="worst-mobile">Worst Mobile first</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- LEADS GRID -->
-      <div class="leads-grid" id="leads-container"></div>
-
+        <div class="results-toolbar"><span id="results-count">Loading prospects…</span><div><label for="sort-select">Sort:</label><select id="sort-select" class="form-select"><option value="recent">Recently added</option><option value="worst-seo">Lowest SEO first</option><option value="worst-speed">Lowest speed first</option><option value="worst-mobile">Lowest mobile first</option></select></div></div>
+        <div class="leads-grid" id="leads-container"></div>
+      </section>
     </main>
   </div>
 </div>
-
 <div class="toast-container" aria-live="polite"></div>
 <script src="runtime-config.js"></script>
 <script src="js/main.js"></script>

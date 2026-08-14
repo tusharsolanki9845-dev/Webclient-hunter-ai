@@ -37,6 +37,17 @@ const leadCreateRules = [
   body('mobile_score').optional().isInt({ min: 0, max: 100 }).toInt(),
 ];
 
+const leadImportRules = [
+  body('leads').isArray({ min: 1, max: 50 }).withMessage('Import 1 to 50 leads at a time'),
+  body('leads.*').isObject().withMessage('Each imported lead must be an object'),
+  body('leads.*.name').isString().trim().notEmpty().withMessage('Every lead needs a business name').isLength({ max: 200 }),
+  body('leads.*.url').isString().trim().notEmpty().withMessage('Every lead needs a website URL').isLength({ max: 500 })
+    .custom(value => { normalizeHttpUrl(value); return true; }).withMessage('Every website must use a valid HTTP or HTTPS URL'),
+  body('leads.*.niche').optional({ values: 'falsy' }).isString().trim().isLength({ max: 100 }),
+  body('leads.*.location').optional({ values: 'falsy' }).isString().trim().isLength({ max: 200 }),
+  body('leads.*.notes').optional({ values: 'falsy' }).isString().trim().isLength({ max: 2000 }),
+];
+
 const leadUpdateRules = [
   param('id').isUUID().withMessage('Lead ID must be a UUID'),
   body('name').optional().isString().trim().notEmpty().isLength({ max: 200 }),
@@ -104,6 +115,7 @@ module.exports = {
   LEAD_STATUSES,
   validate,
   leadCreateRules,
+  leadImportRules,
   leadUpdateRules,
   leadIdRules,
   leadSearchRules,

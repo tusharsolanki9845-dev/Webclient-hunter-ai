@@ -96,7 +96,8 @@ const DEMO_LEADS = [
   { id: 'a1202e9f-6a5c-4d1f-8a0e-000000000002', name: 'Bella Vista Italian Restaurant', niche: 'Restaurant', location: 'Austin, TX', url: 'https://bellavista.example', seo_score: 41, speed_score: 55, mobile_score: 38, status: 'contacted', notes: 'Menu not mobile-friendly' },
   { id: 'a1202e9f-6a5c-4d1f-8a0e-000000000003', name: 'Greenleaf Landscaping Co.', niche: 'Landscaping', location: 'Denver, CO', url: 'https://greenleaf.example', seo_score: 22, speed_score: 35, mobile_score: 30, status: 'interested', notes: 'No contact form' },
 ];
-const normaliseLead = lead => ({ ...lead, seoScore: Number(lead.seo_score ?? lead.seoScore ?? 0), speedScore: Number(lead.speed_score ?? lead.speedScore ?? 0), mobileScore: Number(lead.mobile_score ?? lead.mobileScore ?? 0), status: lead.status || 'new' });
+const scoreValue = value => (value === null || value === undefined || value === '' ? null : Number(value));
+const normaliseLead = lead => ({ ...lead, seoScore: scoreValue(lead.seo_score ?? lead.seoScore), speedScore: scoreValue(lead.speed_score ?? lead.speedScore), mobileScore: scoreValue(lead.mobile_score ?? lead.mobileScore), status: lead.status || 'new' });
 let demoLeads = DEMO_LEADS.map(normaliseLead);
 
 function demoApi(method, suffix = '', body) {
@@ -109,6 +110,16 @@ function demoApi(method, suffix = '', body) {
   if (method === 'GET' && (!route || route === '/')) return { ok: true, status: 200, data: { data: demoLeads, total: demoLeads.length, demo: true }, error: '' };
   const id = route.replace(/^\//, ''); const index = demoLeads.findIndex(lead => lead.id === id);
   if (method === 'GET') return index === -1 ? { ok: false, status: 404, data: null, error: 'Lead not found.' } : { ok: true, status: 200, data: { data: demoLeads[index], demo: true }, error: '' };
+  if (method === 'POST' && route === '/import') {
+    const created = [], skipped = [], known = new Set(demoLeads.map(lead => normaliseUrlKey(lead.url)));
+    for (const entry of body?.leads || []) {
+      const url = normaliseWebsite(entry.url); const key = normaliseUrlKey(url);
+      if (known.has(key)) { skipped.push({ name: entry.name, url, reason: 'already in CRM' }); continue; }
+      const lead = normaliseLead({ ...entry, url, id: crypto.randomUUID(), status: 'new', notes: entry.notes || 'Imported from a free lead source.', seo_score: null, speed_score: null, mobile_score: null, created_at: new Date().toISOString() });
+      demoLeads.unshift(lead); known.add(key); created.push(lead);
+    }
+    return { ok: true, status: created.length ? 201 : 200, data: { data: { created, skipped, createdCount: created.length, skippedCount: skipped.length }, demo: true }, error: '' };
+  }
   if (method === 'POST' && (!route || route === '/')) { const lead = normaliseLead({ ...body, id: crypto.randomUUID(), created_at: new Date().toISOString() }); demoLeads.unshift(lead); return { ok: true, status: 201, data: { data: lead, demo: true }, error: '' }; }
   if (index === -1) return { ok: false, status: 404, data: null, error: 'Lead not found.' };
   if (method === 'PATCH') { demoLeads[index] = normaliseLead({ ...demoLeads[index], ...body }); return { ok: true, status: 200, data: { data: demoLeads[index], demo: true }, error: '' }; }
@@ -237,12 +248,112 @@ async function initDashboard() {
   } catch (error) { Toast.error('Could not load dashboard', error.message); }
 }
 
+function normaliseWebsite(value) {
+  const textValue = String(value || '').trim();
+  const candidate = /^[a-z][a-z0-9+.-]*:/i.test(textValue) ? textValue : `https://${textValue}`;
+  const parsed = new URL(candidate);
+  if (!['http:', 'https:'].includes(parsed.protocol) || !parsed.hostname || parsed.username || parsed.password) throw new Error('Use a valid public HTTP or HTTPS website URL.');
+  return parsed.toString();
+}
+function normaliseUrlKey(value) {
+  const parsed = new URL(normaliseWebsite(value)); parsed.hash = ''; parsed.search = '';
+  if (parsed.pathname.length > 1) parsed.pathname = parsed.pathname.replace(/\/+$/, '');
+  return `${parsed.protocol}//${parsed.host}${parsed.pathname === '/' ? '' : parsed.pathname}`.toLowerCase();
+}
+function splitLeadRow(line, delimiter) {
+  const cells = []; let cell = ''; let quoted = false;
+  for (let index = 0; index < line.length; index += 1) {
+    const character = line[index];
+    if (character === '"') { if (quoted && line[index + 1] === '"') { cell += '"'; index += 1; } else quoted = !quoted; }
+    else if (character === delimiter && !quoted) { cells.push(cell.trim()); cell = ''; }
+    else cell += character;
+  }
+  cells.push(cell.trim()); return cells;
+}
+function parseLeadRows(raw, defaults) {
+  const lines = String(raw || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+  if (!lines.length) return [];
+  const delimiter = lines[0].includes('\t') ? '\t' : lines[0].includes('|') ? '|' : ',';
+  const rows = lines.map(line => splitLeadRow(line, delimiter));
+  const header = rows[0].map(value => value.toLowerCase().replace(/[\s_-]/g, ''));
+  const hasHeader = header.includes('name') && (header.includes('url') || header.includes('website'));
+  const columns = hasHeader ? header : ['name', 'url', 'niche', 'location', 'notes'];
+  return rows.slice(hasHeader ? 1 : 0).map(cells => {
+    const source = Object.fromEntries(columns.map((column, index) => [column, cells[index] || '']));
+    return { name: source.name || source.business || source.businessname || '', url: source.url || source.website || source.websiteurl || '', niche: source.niche || defaults.niche, location: source.location || source.city || defaults.location, notes: source.notes || '' };
+  });
+}
+
 const SearchPage = {
   leads: [],
-  async init() { if (!$('leads-container')) return; $('search-form')?.addEventListener('submit', event => { event.preventDefault(); this.search(); }); $('sort-select')?.addEventListener('change', () => this.render(this.sort(this.leads))); await this.search(); },
-  sort(leads) { const order = $('sort-select')?.value; return [...leads].sort((a, b) => order === 'worst-seo' ? a.seoScore - b.seoScore : order === 'worst-speed' ? a.speedScore - b.speedScore : order === 'worst-mobile' ? a.mobileScore - b.mobileScore : 0); },
-  async search() { const params = new URLSearchParams(); const niche = $('niche-input')?.value.trim(), location = $('location-input')?.value.trim(); const button = $('search-btn'); const container = $('leads-container'); if (niche) params.set('niche', niche); if (location) params.set('location', location); setBusy(button, true, 'Searching…'); container?.setAttribute('aria-busy', 'true'); try { const result = await leadApi('GET', `/search${params.size ? `?${params}` : ''}`); if (!result.ok) return Toast.error('Could not search leads', result.error); this.leads = (result.data?.data || []).map(normaliseLead); this.render(this.sort(this.leads)); } finally { setBusy(button, false); container?.removeAttribute('aria-busy'); } },
-  render(leads) { const container = $('leads-container'); if (!container) return; text($('results-count'), `${leads.length} lead${leads.length === 1 ? '' : 's'}`); container.replaceChildren(); if (!leads.length) return container.appendChild(empty('No saved leads match', 'Run an audit and save a lead to build your pipeline.')); leads.forEach(lead => { const card = tag('article', 'glass-card lead-card fade-in'); const top = tag('div', 'lead-card-top'), info = tag('div'); info.append(tag('div', 'lead-name', lead.name), tag('div', 'lead-meta', `${lead.niche || 'Uncategorised'} · ${lead.location || 'No location'}`)); const overall = Math.round((lead.seoScore + lead.speedScore + lead.mobileScore) / 3); top.append(info, tag('span', `badge ${overall < 40 ? 'badge-red' : overall < 60 ? 'badge-yellow' : 'badge-green'}`, `${overall}/100`)); const scores = tag('div', 'lead-scores'); [['SEO', lead.seoScore], ['Speed', lead.speedScore], ['Mobile', lead.mobileScore]].forEach(([label, value]) => { const pill = tag('span', 'score-pill'); pill.append(tag('span', `score-dot ${scoreClass(value)}`), document.createTextNode(`${label} ${value}`)); scores.appendChild(pill); }); const audit = tag('a', 'btn btn-primary btn-sm', 'Run Audit'); audit.href = `reports.html?id=${encodeURIComponent(lead.id)}`; card.append(top, tag('div', 'lead-url', `Website: ${lead.url}`), scores, audit); container.appendChild(card); }); },
+  async init() {
+    if (!$('leads-container')) return;
+    $('saved-filter-form')?.addEventListener('submit', event => { event.preventDefault(); this.search(); });
+    $('sort-select')?.addEventListener('change', () => this.render(this.sort(this.leads)));
+    $('lead-import-form')?.addEventListener('submit', event => { event.preventDefault(); this.importLeads(); });
+    $('lead-csv-file')?.addEventListener('change', async event => {
+      const file = event.target.files?.[0]; if (!file) return;
+      if (file.size > 250000) return Toast.warning('Choose a smaller file', 'Import up to 50 leads at a time.');
+      $('lead-paste').value = await file.text();
+      text($('import-status'), `Loaded ${file.name}. Review the rows, then import.`);
+    });
+    $('download-csv-template')?.addEventListener('click', () => this.downloadTemplate());
+    await this.search();
+  },
+  sort(leads) {
+    const order = $('sort-select')?.value || 'recent'; const score = (lead, key) => lead[key] === null ? 101 : lead[key];
+    return [...leads].sort((a, b) => order === 'worst-seo' ? score(a, 'seoScore') - score(b, 'seoScore') : order === 'worst-speed' ? score(a, 'speedScore') - score(b, 'speedScore') : order === 'worst-mobile' ? score(a, 'mobileScore') - score(b, 'mobileScore') : new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  },
+  async search() {
+    const params = new URLSearchParams(); const niche = $('niche-input')?.value.trim(), location = $('location-input')?.value.trim(); const button = $('search-btn'); const container = $('leads-container');
+    if (niche) params.set('niche', niche); if (location) params.set('location', location);
+    setBusy(button, true, 'Filtering…'); container?.setAttribute('aria-busy', 'true');
+    try {
+      const result = await leadApi('GET', `/search${params.size ? `?${params}` : ''}`);
+      if (!result.ok) return Toast.error('Could not load your CRM', result.error);
+      this.leads = (result.data?.data || []).map(normaliseLead); this.render(this.sort(this.leads));
+    } finally { setBusy(button, false); container?.removeAttribute('aria-busy'); }
+  },
+  async importLeads() {
+    const status = $('import-status'); const defaults = { niche: $('import-niche')?.value.trim() || '', location: $('import-location')?.value.trim() || '' };
+    const rows = parseLeadRows($('lead-paste')?.value, defaults);
+    if (!rows.length) return Toast.warning('Add businesses first', 'Paste prospect rows or load a CSV file.');
+    const valid = [], invalid = [], seen = new Set();
+    rows.forEach((row, index) => {
+      try {
+        const name = String(row.name || '').trim(); if (!name || name.length > 200) throw new Error('business name is missing or too long');
+        const url = normaliseWebsite(row.url); const key = normaliseUrlKey(url); if (seen.has(key)) throw new Error('duplicate website in this import');
+        seen.add(key); valid.push({ name, url, niche: String(row.niche || 'Uncategorised').trim() || 'Uncategorised', location: String(row.location || '').trim(), notes: String(row.notes || '').trim() });
+      } catch (error) { invalid.push(`Row ${index + 1}: ${error.message}`); }
+    });
+    if (!valid.length) return Toast.error('Nothing was imported', invalid.slice(0, 2).join(' · ') || 'Every row needs a business name and valid website.');
+    const button = $('import-leads-btn'); setBusy(button, true, 'Importing…'); text(status, 'Checking duplicates and saving prospects…');
+    try {
+      const result = await leadApi('POST', '/import', { leads: valid.slice(0, 50) });
+      if (!result.ok) return Toast.error('Import failed', result.error);
+      const summary = result.data?.data || {}; const messages = [`${summary.createdCount || 0} saved`];
+      if (summary.skippedCount) messages.push(`${summary.skippedCount} already existed`); if (invalid.length) messages.push(`${invalid.length} invalid row${invalid.length === 1 ? '' : 's'} ignored`);
+      text(status, messages.join(' · ')); $('lead-paste').value = ''; $('lead-csv-file').value = ''; Toast.success('Prospects imported', messages.join(' · ')); await this.search();
+    } finally { setBusy(button, false); }
+  },
+  downloadTemplate() {
+    const csv = 'name,url,niche,location,notes\nExample Business,https://example.com,Restaurant,Greater Noida,Found in local directory\n';
+    const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); link.download = 'webclient-hunter-leads-template.csv'; link.click(); URL.revokeObjectURL(link.href);
+  },
+  render(leads) {
+    const container = $('leads-container'); if (!container) return; text($('results-count'), `${leads.length} saved prospect${leads.length === 1 ? '' : 's'}`); container.replaceChildren();
+    if (!leads.length) return container.appendChild(empty('Your prospect list is empty', 'Paste a few businesses or upload a CSV above, then run website audits to find the best opportunities.'));
+    leads.forEach(lead => {
+      const card = tag('article', 'glass-card lead-card fade-in'); const top = tag('div', 'lead-card-top'), info = tag('div');
+      info.append(tag('div', 'lead-name', lead.name), tag('div', 'lead-meta', `${lead.niche || 'Uncategorised'} · ${lead.location || 'No location'}`));
+      const audited = [lead.seoScore, lead.speedScore, lead.mobileScore].every(value => Number.isFinite(value));
+      top.append(info, tag('span', `badge ${audited ? (Math.round((lead.seoScore + lead.speedScore + lead.mobileScore) / 3) < 40 ? 'badge-red' : Math.round((lead.seoScore + lead.speedScore + lead.mobileScore) / 3) < 60 ? 'badge-yellow' : 'badge-green') : 'badge-gray'}`, audited ? `${Math.round((lead.seoScore + lead.speedScore + lead.mobileScore) / 3)}/100` : 'Not audited'));
+      card.append(top, tag('div', 'lead-url', lead.url));
+      if (!audited) card.append(tag('div', 'unaudited', 'This prospect is ready for a website audit. Audit first, then use the findings to qualify outreach.'));
+      else { const scores = tag('div', 'lead-scores'); [['SEO', lead.seoScore], ['Speed', lead.speedScore], ['Mobile', lead.mobileScore]].forEach(([label, value]) => { const pill = tag('span', 'score-pill'); pill.append(tag('span', `score-dot ${scoreClass(value)}`), document.createTextNode(`${label} ${value}`)); scores.appendChild(pill); }); card.append(scores, tag('div', 'audit-summary', 'Audit complete — prioritize the lowest scores for outreach.')); }
+      const actions = tag('div', 'lead-actions'); const audit = tag('a', 'btn btn-primary btn-sm', audited ? 'Re-run audit' : 'Run website audit'); audit.href = `reports.html?id=${encodeURIComponent(lead.id)}`; const crm = tag('a', 'btn btn-secondary btn-sm', 'Open CRM'); crm.href = `crm.html`; actions.append(audit, crm); card.append(actions); container.appendChild(card);
+    });
+  },
 };
 window.quickSearch = (niche, location = '') => { if ($('niche-input')) $('niche-input').value = niche; if ($('location-input')) $('location-input').value = location; SearchPage.search(); };
 
