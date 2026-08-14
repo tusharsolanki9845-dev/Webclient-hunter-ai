@@ -289,6 +289,7 @@ const SearchPage = {
   async init() {
     if (!$('leads-container')) return;
     $('saved-filter-form')?.addEventListener('submit', event => { event.preventDefault(); this.search(); });
+    $('discovery-form')?.addEventListener('submit', event => { event.preventDefault(); this.discover(); });
     $('sort-select')?.addEventListener('change', () => this.render(this.sort(this.leads)));
     $('lead-import-form')?.addEventListener('submit', event => { event.preventDefault(); this.importLeads(); });
     $('lead-csv-file')?.addEventListener('change', async event => {
@@ -299,6 +300,58 @@ const SearchPage = {
     });
     $('download-csv-template')?.addEventListener('click', () => this.downloadTemplate());
     await this.search();
+  },
+  async discover() {
+    const category = $('discovery-category')?.value || ''; const location = $('discovery-location')?.value.trim() || ''; const source = $('discovery-source')?.value || 'openstreetmap';
+    if (!category || !location) return Toast.warning('Choose a category and city or area.');
+    const button = $('discovery-search-btn'); const results = $('discovery-results'); const params = new URLSearchParams({ category, location, source });
+    setBusy(button, true, 'Searching real businesses…'); results?.setAttribute('aria-busy', 'true');
+    try {
+      const route = `/discovery${Auth.demo() ? '/demo' : ''}/search?${params}`; const result = await API.get(route);
+      if (!result.ok) return Toast.error('Business search could not run', result.error);
+      this.renderDiscovery(result.data?.data || {});
+    } finally { setBusy(button, false); results?.removeAttribute('aria-busy'); }
+  },
+  renderDiscovery(payload) {
+    const section = $('discovery-results-section'), container = $('discovery-results'); if (!container) return;
+    section?.removeAttribute('hidden'); text($('discovery-results-count'), `${(payload.prospects || []).length} website-ready business${(payload.prospects || []).length === 1 ? '' : 'es'} in ${payload.location?.displayName || payload.location?.query || 'your selected area'}`);
+    const attribution = $('discovery-attribution'); if (attribution) { attribution.replaceChildren(); const label = document.createTextNode('Source: '); const link = document.createElement('a'); link.href = payload.attributionUrl || 'https://www.openstreetmap.org/copyright'; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = payload.attribution || '© OpenStreetMap contributors'; attribution.append(label, link); }
+    container.replaceChildren(); const prospects = Array.isArray(payload.prospects) ? payload.prospects : [];
+    if (!prospects.length) return container.appendChild(empty('No website-ready businesses found', 'Try a nearby city, a broader area, or a different category. The free source only returns mapped businesses with a public website.'));
+    prospects.forEach(prospect => {
+      const card = tag('article', 'glass-card discovery-card fade-in'); const top = tag('div', 'lead-card-top'), info = tag('div'); info.append(tag('div', 'lead-name', prospect.name), tag('div', 'lead-meta', `${prospect.niche || 'Business'} · ${prospect.location || 'Selected area'}`)); top.append(info, tag('span', 'badge badge-blue', payload.demo ? 'Demo result' : 'Real result'));
+      const website = tag('a', 'lead-url', prospect.url); website.href = prospect.url; website.target = '_blank'; website.rel = 'noopener noreferrer'; card.append(top, website);
+      const note = tag('div', 'discovery-note', 'Public website found. Rate the site and check its homepage for a public business contact before deciding whether this is a strong outreach opportunity.'); const details = tag('div', 'discovery-details'); card.append(note, details);
+      const actions = tag('div', 'lead-actions'); const enrich = action('Rate site & find contact', 'btn btn-secondary btn-sm', () => this.enrichDiscoveryLead(prospect, enrich, details)); const audit = tag('a', 'btn btn-primary btn-sm', 'Open full audit'); audit.href = `reports.html?url=${encodeURIComponent(prospect.url)}&name=${encodeURIComponent(prospect.name)}`;
+      const save = action('Save to CRM', 'btn btn-secondary btn-sm', () => this.saveDiscoveryLead(prospect, save)); actions.append(enrich, audit, save);
+      if (prospect.sourceUrl) { const source = tag('a', 'btn btn-ghost btn-sm', 'Source'); source.href = prospect.sourceUrl; source.target = '_blank'; source.rel = 'noopener noreferrer'; actions.append(source); }
+      card.append(actions); container.appendChild(card);
+    });
+  },
+  async enrichDiscoveryLead(prospect, button, details) {
+    setBusy(button, true, 'Rating website…');
+    try {
+      const route = `/discovery${Auth.demo() ? '/demo' : ''}/enrich`; const result = await API.post(route, { url: prospect.url });
+      if (!result.ok) return Toast.error('Website rating could not run', result.error);
+      const data = result.data?.data || {}; prospect.emails = Array.isArray(data.emails) ? data.emails : []; prospect.report = data.report || null; details.replaceChildren();
+      const report = prospect.report; const contact = tag('div', 'contact-result'); contact.append(tag('strong', '', prospect.emails.length ? 'Public business contact found' : 'No generic public email found on homepage'));
+      if (prospect.emails.length) { const emails = tag('div', 'contact-emails'); prospect.emails.forEach(email => { const link = tag('a', '', email); link.href = `mailto:${email}`; emails.appendChild(link); }); contact.appendChild(emails); }
+      const rating = tag('div', 'rating-result'); if (report?.scores) { rating.append(tag('span', `badge ${report.scores.overall < 40 ? 'badge-red' : report.scores.overall < 60 ? 'badge-yellow' : 'badge-green'}`, `${report.scores.overall}/100 site rating`)); const scoreText = tag('span', '', `SEO ${report.scores.seo} · Speed ${report.scores.speed} · Mobile ${report.scores.mobile}`); rating.appendChild(scoreText); }
+      details.append(contact, rating);
+      if (Array.isArray(report?.issues) && report.issues.length) { const findings = tag('div', 'rating-findings'); findings.append(tag('strong', '', 'Top audit findings')); const list = tag('ul'); report.issues.slice(0, 2).forEach(issue => list.appendChild(tag('li', '', issue.title))); findings.appendChild(list); details.appendChild(findings); }
+      button.disabled = true; button.textContent = 'Rating loaded'; Toast.success('Website rating loaded', prospect.emails.length ? 'A public generic business contact was found on the homepage.' : 'No generic public email was found on the homepage.');
+    } finally { if (!button.disabled) setBusy(button, false); }
+  },
+  async saveDiscoveryLead(prospect, button) {
+    setBusy(button, true, 'Saving…');
+    try {
+      const publicEmailNote = Array.isArray(prospect.emails) && prospect.emails.length ? ` Public generic website contact: ${prospect.emails.join(', ')}.` : '';
+      const result = await leadApi('POST', '/import', { leads: [{ name: prospect.name, url: prospect.url, niche: prospect.niche || 'Uncategorised', location: prospect.location || '', notes: `Found through the OpenStreetMap free business search.${publicEmailNote}` }] });
+      if (!result.ok) return Toast.error('Could not save prospect', result.error);
+      const summary = result.data?.data || {}; const created = Number(summary.createdCount || 0) > 0;
+      Toast.success(created ? 'Prospect saved to CRM' : 'Already in your CRM', created ? `${prospect.name} is ready for a website audit.` : `${prospect.name}'s website was already saved.`);
+      button.disabled = true; button.textContent = created ? 'Saved to CRM' : 'Already saved'; await this.search();
+    } finally { if (!button.disabled) setBusy(button, false); }
   },
   sort(leads) {
     const order = $('sort-select')?.value || 'recent'; const score = (lead, key) => lead[key] === null ? 101 : lead[key];
@@ -363,7 +416,9 @@ function renderIssues(issues) { const list = $('dynamic-issues'); if (!list) ret
 function demoReport(url) { return { url, scores: { seo: 42, speed: 38, mobile: 54, security: 45 }, issues: [{ severity: 'high', title: 'Demo finding: slow response', desc: 'This sample result is shown only in explicit demo mode.' }, { severity: 'medium', title: 'Demo finding: missing structured data', desc: 'Run a real audit for live results.' }] }; }
 async function initReports() {
   if (!$('report-section')) return; text($('audit-date'), new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
-  const id = new URLSearchParams(location.search).get('id'); if (id) { const result = await leadApi('GET', `/${encodeURIComponent(id)}`); if (result.ok && result.data?.data) { selectedLead = normaliseLead(result.data.data); $('audit-url-input').value = selectedLead.url; document.querySelectorAll('.audit-business-name').forEach(node => text(node, selectedLead.name)); document.querySelectorAll('.audit-url').forEach(node => text(node, selectedLead.url)); scores(selectedLead.seoScore, selectedLead.speedScore, selectedLead.mobileScore); } }
+  const params = new URLSearchParams(location.search); const id = params.get('id'); const prefilledUrl = params.get('url'); const prefilledName = params.get('name');
+  if (id) { const result = await leadApi('GET', `/${encodeURIComponent(id)}`); if (result.ok && result.data?.data) { selectedLead = normaliseLead(result.data.data); $('audit-url-input').value = selectedLead.url; document.querySelectorAll('.audit-business-name').forEach(node => text(node, selectedLead.name)); document.querySelectorAll('.audit-url').forEach(node => text(node, selectedLead.url)); scores(selectedLead.seoScore, selectedLead.speedScore, selectedLead.mobileScore); } }
+  else if (prefilledUrl) { try { const safeUrl = normaliseWebsite(prefilledUrl); $('audit-url-input').value = safeUrl; document.querySelectorAll('.audit-business-name').forEach(node => text(node, prefilledName || safeUrl)); document.querySelectorAll('.audit-url').forEach(node => text(node, safeUrl)); } catch { Toast.warning('The selected discovery website was invalid. Enter a valid website URL to audit.'); } }
   $('audit-form')?.addEventListener('submit', async event => { event.preventDefault(); const url = $('audit-url-input')?.value.trim(); if (!url) return Toast.warning('Enter a website URL.'); const button = $('run-audit-btn'); setBusy(button, true, 'Auditing…'); try { if (Auth.demo()) report = demoReport(url); else { const result = await API.post('/audit', { url, ...(selectedLead ? { leadId: selectedLead.id } : {}) }); if (!result.ok) return Toast.error('Audit failed', result.error); report = result.data?.data; } document.querySelectorAll('.audit-business-name').forEach(node => text(node, selectedLead?.name || report.url)); document.querySelectorAll('.audit-url').forEach(node => text(node, report.url)); scores(report.scores.seo, report.scores.speed, report.scores.mobile); renderIssues(report.issues || []); Toast.success('Audit complete.'); } finally { setBusy(button, false); } });
 }
 window.loadDemoReport = () => { if (!Auth.demo()) return Toast.info('Open the explicit demo to view a sample report.'); report = demoReport($('audit-url-input')?.value.trim() || 'https://example.com'); scores(report.scores.seo, report.scores.speed, report.scores.mobile); renderIssues(report.issues); Toast.success('Demo report loaded.'); };

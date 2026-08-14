@@ -2,6 +2,7 @@
 
 const { body, param, query, validationResult } = require('express-validator');
 const { normalizeHttpUrl, validatePublicWebsiteUrl } = require('./urlSafety');
+const { DISCOVERY_CATEGORIES } = require('./discoveryCategories');
 
 const LEAD_STATUSES = ['new', 'contacted', 'interested', 'proposal', 'won', 'lost'];
 
@@ -71,6 +72,22 @@ const leadSearchRules = [
     .withMessage('maxScore must be greater than or equal to minScore'),
 ];
 
+const discoverySearchRules = [
+  query('category').isString().trim().isIn(Object.keys(DISCOVERY_CATEGORIES)).withMessage('Choose a supported business category'),
+  query('location').isString().trim().notEmpty().withMessage('City or area is required').isLength({ min: 2, max: 160 }),
+  query('source').optional().equals('openstreetmap').withMessage('Only the OpenStreetMap source is currently supported'),
+];
+
+const discoveryEnrichRules = [
+  body('url').isString().trim().notEmpty().withMessage('A business website URL is required').isLength({ max: 500 })
+    .custom(async value => { await validatePublicWebsiteUrl(value); return true; }).withMessage('Use a valid public HTTP or HTTPS business website URL'),
+];
+
+const discoveryDemoEnrichRules = [
+  body('url').isString().trim().notEmpty().withMessage('A business website URL is required').isLength({ max: 500 })
+    .custom(value => { normalizeHttpUrl(value); return true; }).withMessage('Use a valid HTTP or HTTPS business website URL'),
+];
+
 const auditRules = [
   body('url').isString().trim().notEmpty().withMessage('URL is required').isLength({ max: 2048 })
     .custom(async value => { await validatePublicWebsiteUrl(value); return true; }),
@@ -119,6 +136,9 @@ module.exports = {
   leadUpdateRules,
   leadIdRules,
   leadSearchRules,
+  discoverySearchRules,
+  discoveryEnrichRules,
+  discoveryDemoEnrichRules,
   auditRules,
   outreachRules,
   signupRules,

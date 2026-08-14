@@ -6,6 +6,7 @@ const test = require('node:test');
 
 const { normalizeHttpUrl, isPublicIp } = require('../utils/urlSafety');
 const { fetchPage, analyzeWebsite } = require('../services/websiteAudit.service');
+const { DISCOVERY_CATEGORIES, boundedBox, overpassQuery, normalizeElement, extractPublicBusinessEmails } = require('../controllers/discovery.controller');
 const { app } = require('../server');
 
 async function withServer(run) {
@@ -55,6 +56,24 @@ test('audit analysis accepts description attributes in either order and external
   assert.equal(result.scores.seo, 100);
   assert.equal(result.scores.mobile, 100);
   assert.equal(result.scores.security, 100);
+});
+
+test('free discovery uses bounded category queries and returns only safe public website candidates', () => {
+  const category = DISCOVERY_CATEGORIES.restaurant;
+  const query = overpassQuery(category, { south: 28.3, west: 77.3, north: 28.4, east: 77.4 });
+  assert.match(query, /amenity"="restaurant/);
+  assert.match(query, /\["website"\]/);
+  assert.match(query, /out center 25/);
+  assert.equal(normalizeElement({ type: 'node', id: 1, lat: 28.3, lon: 77.3, tags: { name: 'Cafe Example', website: 'example.com' } }, category, 'Test area').url, 'https://example.com/');
+  assert.equal(normalizeElement({ type: 'node', id: 2, tags: { name: 'Unsafe Example', website: 'ftp://example.com' } }, category, 'Test area'), null);
+  const box = boundedBox({ lat: '28.5', lon: '77.4', boundingbox: ['27.0', '30.0', '76.0', '79.0'] });
+  assert.ok(box.north - box.south <= 0.18);
+  assert.ok(box.east - box.west <= 0.22);
+});
+
+test('public contact enrichment keeps generic business inboxes and excludes person-named emails', () => {
+  const emails = extractPublicBusinessEmails('<a href="mailto:Info@Example.com">Contact</a> jane.doe@example.com sales@example.com billing@example.com hello@example.com');
+  assert.deepEqual(emails, ['info@example.com', 'sales@example.com', 'hello@example.com']);
 });
 
 test('health stays public while protected routes fail closed and OAuth rejects invalid requests', async () => {

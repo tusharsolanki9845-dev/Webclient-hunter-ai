@@ -11,6 +11,7 @@ const authRoutes = require('./routes/auth.routes');
 const leadsRoutes = require('./routes/leads.routes');
 const auditRoutes = require('./routes/audit.routes');
 const outreachRoutes = require('./routes/outreach.routes');
+const discoveryRoutes = require('./routes/discovery.routes');
 const { errorHandler } = require('./middleware/error.middleware');
 
 const app = express();
@@ -54,6 +55,7 @@ app.use('/api', createLimiter(Number(process.env.RATE_LIMIT_MAX_REQUESTS || 100)
 app.use('/api/auth', createLimiter(Number(process.env.AUTH_RATE_LIMIT_MAX || 20), 'Too many authentication attempts. Please try again later.'));
 app.use('/api/audit', createLimiter(Number(process.env.AUDIT_RATE_LIMIT_MAX || 20), 'Too many audit requests. Please try again later.'));
 app.use('/api/outreach', createLimiter(Number(process.env.OUTREACH_RATE_LIMIT_MAX || 10), 'Too many AI generation requests. Please try again later.'));
+app.use('/api/discovery', createLimiter(Number(process.env.DISCOVERY_RATE_LIMIT_MAX || 8), 'Too many free business searches. Please wait a few minutes and try again.'));
 
 if (process.env.NODE_ENV !== 'test') app.use(morgan(isProduction ? 'combined' : 'dev'));
 
@@ -68,6 +70,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/leads', leadsRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/outreach', outreachRoutes);
+app.use('/api/discovery', discoveryRoutes);
 
 app.use((req, res) => res.status(404).json({ error: `${req.method} ${req.path} not found.` }));
 app.use(errorHandler);
