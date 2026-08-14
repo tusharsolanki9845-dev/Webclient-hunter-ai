@@ -1,520 +1,309 @@
-/* =================================================================
-   WebClient Hunter AI — main.js
-   All JS for every page. No dependencies.
-================================================================= */
-
+/* WebClient Hunter AI — secure client application. */
 'use strict';
 
-/* ── THEME ─────────────────────────────────────────────────────── */
-const Theme = {
-  init() {
-    this.apply(localStorage.getItem('wcha-theme') || 'light');
-  },
-  apply(t) {
-    document.documentElement.setAttribute('data-theme', t);
-    localStorage.setItem('wcha-theme', t);
-    document.querySelectorAll('.dark-toggle').forEach(b => {
-      b.textContent = t === 'dark' ? '☀️' : '🌙';
-      b.setAttribute('aria-label', t === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
-    });
-  },
-  toggle() { this.apply(localStorage.getItem('wcha-theme') === 'dark' ? 'light' : 'dark'); }
-};
+const DEFAULT_API_BASE = window.WCHA_RUNTIME_CONFIG?.apiBase || '';
+const SESSION_KEY = 'wcha-session';
+const DEMO_KEY = 'wcha-demo-mode';
+const API_URL_KEY = 'wcha-api-url';
+const PROFILE_KEY = 'wcha-profile';
+const $ = id => document.getElementById(id);
+const text = (node, value = '') => { if (node) node.textContent = String(value); };
+const busyLabels = new WeakMap();
+function setBusy(button, busy, label = 'Working…') {
+  if (!button) return;
+  if (busy) {
+    if (!busyLabels.has(button)) busyLabels.set(button, button.innerHTML);
+    button.disabled = true;
+    button.setAttribute('aria-busy', 'true');
+    button.classList.add('is-loading');
+    button.innerHTML = `<span class="spinner" aria-hidden="true"></span><span>${label}</span>`;
+    return;
+  }
+  button.disabled = false;
+  button.removeAttribute('aria-busy');
+  button.classList.remove('is-loading');
+  if (busyLabels.has(button)) button.innerHTML = busyLabels.get(button);
+}
+const scoreClass = score => Number(score) >= 70 ? 'good' : Number(score) >= 40 ? 'avg' : 'poor';
+const scoreColor = score => Number(score) >= 70 ? '#10B981' : Number(score) >= 40 ? '#F59E0B' : '#EF4444';
+const statusClass = { new: 'badge-blue', contacted: 'badge-yellow', interested: 'badge-blue', proposal: 'badge-yellow', won: 'badge-green', lost: 'badge-gray' };
 
-/* ── TOAST ──────────────────────────────────────────────────────── */
+function apiBase(value = localStorage.getItem(API_URL_KEY) || DEFAULT_API_BASE) {
+  try {
+    const url = new URL(value.trim());
+    const local = ['localhost', '127.0.0.1'].includes(url.hostname);
+    if (!['http:', 'https:'].includes(url.protocol) || (!local && url.protocol !== 'https:')) throw new Error('invalid');
+    return url.origin;
+  } catch { return DEFAULT_API_BASE; }
+}
+
 const Toast = {
-  _wrap: null,
-  _ensure() {
-    if (!this._wrap) {
-      this._wrap = document.querySelector('.toast-container');
-      if (!this._wrap) {
-        this._wrap = document.createElement('div');
-        this._wrap.className = 'toast-container';
-        document.body.appendChild(this._wrap);
-      }
-    }
+  wrap: null,
+  ensure() {
+    if (this.wrap) return;
+    this.wrap = document.querySelector('.toast-container') || document.body.appendChild(Object.assign(document.createElement('div'), { className: 'toast-container' }));
+    this.wrap.setAttribute('aria-live', 'polite');
   },
-  _icons: { success:'✅', error:'❌', info:'ℹ️', warning:'⚠️' },
-  show(type, title, msg = '', ms = 4000) {
-    this._ensure();
-    const el = document.createElement('div');
-    el.className = `toast ${type}`;
-    el.innerHTML = `<span class="toast-icon">${this._icons[type]||'ℹ️'}</span>
-      <div class="toast-body"><div class="toast-title">${title}</div>${msg?`<div class="toast-msg">${msg}</div>`:''}</div>
-      <button class="toast-close" aria-label="Dismiss">✕</button>`;
-    el.querySelector('.toast-close').onclick = () => this._dismiss(el);
-    this._wrap.appendChild(el);
-    if (ms > 0) setTimeout(() => this._dismiss(el), ms);
+  show(type, title, message = '') {
+    this.ensure();
+    const toast = document.createElement('div'); toast.className = `toast ${type}`; toast.setAttribute('role', 'alert');
+    const icon = document.createElement('span'); icon.className = 'toast-icon'; icon.setAttribute('aria-hidden', 'true'); icon.textContent = ({ success: '✓', error: '×', info: 'i', warning: '!' })[type] || 'i';
+    const body = document.createElement('div'); body.className = 'toast-body';
+    const heading = document.createElement('div'); heading.className = 'toast-title'; heading.textContent = title; body.appendChild(heading);
+    if (message) { const detail = document.createElement('div'); detail.className = 'toast-msg'; detail.textContent = message; body.appendChild(detail); }
+    const close = document.createElement('button'); close.type = 'button'; close.className = 'toast-close'; close.textContent = '×'; close.setAttribute('aria-label', 'Dismiss notification'); close.onclick = () => toast.remove();
+    toast.append(icon, body, close); this.wrap.appendChild(toast); window.setTimeout(() => toast.remove(), 4500);
   },
-  _dismiss(el) {
-    el.style.cssText = 'opacity:0;transform:translateX(110%);transition:.25s ease';
-    setTimeout(() => el.remove(), 260);
-  },
-  success(t, m) { this.show('success', t, m); },
-  error(t, m)   { this.show('error',   t, m); },
-  info(t, m)    { this.show('info',    t, m); },
-  warning(t, m) { this.show('warning', t, m); }
+  success(title, message) { this.show('success', title, message); }, error(title, message) { this.show('error', title, message); },
+  info(title, message) { this.show('info', title, message); }, warning(title, message) { this.show('warning', title, message); },
+};
+window.Toast = Toast;
+
+const Theme = {
+  init() { this.apply(localStorage.getItem('wcha-theme') || 'light'); },
+  apply(theme) { const next = theme === 'dark' ? 'dark' : 'light'; document.documentElement.dataset.theme = next; localStorage.setItem('wcha-theme', next); },
+  toggle() { this.apply(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'); },
 };
 
-/* ── LOCAL STORAGE ─────────────────────────────────────────────── */
-const Store = {
-  _key: 'wcha-leads',
-  getAll() { try { return JSON.parse(localStorage.getItem(this._key)) || []; } catch { return []; } },
-  save(arr) { localStorage.setItem(this._key, JSON.stringify(arr)); },
-  add(lead) {
-    const all = this.getAll();
-    if (all.find(l => l.id === lead.id)) return false;
-    all.unshift({ ...lead, savedAt: Date.now() });
-    this.save(all); return true;
-  },
-  update(id, patch) {
-    const all = this.getAll();
-    const i = all.findIndex(l => l.id === id);
-    if (i === -1) return false;
-    all[i] = { ...all[i], ...patch }; this.save(all); return true;
-  },
-  remove(id) { this.save(this.getAll().filter(l => l.id !== id)); }
+const Auth = {
+  session() { try { return JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null'); } catch { return null; } },
+  token() { return this.session()?.token || null; }, user() { return this.session()?.user || null; }, loggedIn() { return Boolean(this.token()); },
+  set(session) { sessionStorage.setItem(SESSION_KEY, JSON.stringify(session)); }, clear() { sessionStorage.removeItem(SESSION_KEY); },
+  demo() { return sessionStorage.getItem(DEMO_KEY) === 'true'; }, enableDemo() { sessionStorage.setItem(DEMO_KEY, 'true'); }, clearDemo() { sessionStorage.removeItem(DEMO_KEY); },
 };
 
-/* ── DEMO DATA ──────────────────────────────────────────────────── */
-const LEADS = [
-  { id:1,  name:"Murphy's Plumbing & Heating",  niche:"Plumbing",    location:"Chicago, IL",   url:"murphysplumbing.com",     seoScore:32, speedScore:28, mobileScore:45, status:"new",       notes:"No SSL, slow load time, missing Google Business" },
-  { id:2,  name:"Bella Vista Italian Restaurant",niche:"Restaurant",  location:"Austin, TX",    url:"bellavistaaustin.com",    seoScore:41, speedScore:55, mobileScore:38, status:"contacted",  notes:"Menu not mobile-friendly, missing schema markup" },
-  { id:3,  name:"Greenleaf Landscaping Co.",     niche:"Landscaping", location:"Denver, CO",    url:"greenleaflandscaping.co", seoScore:22, speedScore:35, mobileScore:30, status:"interested", notes:"No contact form, poor image optimization" },
-  { id:4,  name:"Dr. Sarah Chen, DDS",           niche:"Dentistry",   location:"Seattle, WA",   url:"sarahchendds.com",        seoScore:58, speedScore:62, mobileScore:71, status:"proposal",   notes:"Decent site but no online booking or reviews" },
-  { id:5,  name:"Peak Performance Gym",          niche:"Fitness",     location:"Miami, FL",     url:"peakperformancegym.io",   seoScore:18, speedScore:22, mobileScore:25, status:"new",       notes:"Terrible performance, no booking system" },
-  { id:6,  name:"Harbor View Legal Group",       niche:"Law Firm",    location:"Boston, MA",    url:"harborviewlegal.com",     seoScore:45, speedScore:48, mobileScore:52, status:"won",        notes:"Outdated design, complete overhaul done" },
-  { id:7,  name:"The Cozy Candle Shop",          niche:"E-commerce",  location:"Nashville, TN", url:"cozycandles.shop",        seoScore:29, speedScore:31, mobileScore:40, status:"contacted",  notes:"No product schema, slow checkout" },
-  { id:8,  name:"Sunrise Chiropractic Center",   niche:"Healthcare",  location:"Phoenix, AZ",   url:"sunrisechiro.care",       seoScore:36, speedScore:44, mobileScore:55, status:"lost",       notes:"Missing local SEO, no online booking" },
-  { id:9,  name:"Ace Auto Repair & Tires",       niche:"Auto Repair", location:"Dallas, TX",    url:"aceautorepair.com",       seoScore:19, speedScore:27, mobileScore:22, status:"new",       notes:"No SSL, broken links, zero local SEO" },
-  { id:10, name:"Bloom & Blossom Florist",       niche:"Florist",     location:"Portland, OR",  url:"bloomflorist.com",        seoScore:44, speedScore:50, mobileScore:60, status:"interested", notes:"Nice design but poor SEO structure" },
+const API = {
+  async request(method, path, body) {
+    const base = apiBase();
+    if (!base) return { ok: false, status: 0, data: null, error: 'The backend is not configured. Set the public API URL in Settings or runtime-config.js.' };
+    const headers = { Accept: 'application/json' };
+    if (body !== undefined) headers['Content-Type'] = 'application/json';
+    if (Auth.token()) headers.Authorization = `Bearer ${Auth.token()}`;
+    try {
+      const response = await fetch(`${base}/api${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+      const isJson = (response.headers.get('content-type') || '').includes('application/json');
+      const payload = response.status === 204 ? null : (isJson ? await response.json() : null);
+      if (response.status === 401) { Auth.clear(); Auth.clearDemo(); if (routeName() !== 'login') location.assign(loginTarget()); }
+      return { ok: response.ok, status: response.status, data: payload, error: payload?.error || (response.ok ? '' : `Request failed (${response.status})`) };
+    } catch { return { ok: false, status: 0, data: null, error: 'The backend could not be reached.' }; }
+  },
+  get(path) { return this.request('GET', path); }, post(path, data) { return this.request('POST', path, data); },
+  patch(path, data) { return this.request('PATCH', path, data); }, delete(path) { return this.request('DELETE', path); },
+};
+
+const DEMO_LEADS = [
+  { id: 'a1202e9f-6a5c-4d1f-8a0e-000000000001', name: "Murphy's Plumbing & Heating", niche: 'Plumbing', location: 'Chicago, IL', url: 'https://murphysplumbing.example', seo_score: 32, speed_score: 28, mobile_score: 45, status: 'new', notes: 'No SSL, slow load time' },
+  { id: 'a1202e9f-6a5c-4d1f-8a0e-000000000002', name: 'Bella Vista Italian Restaurant', niche: 'Restaurant', location: 'Austin, TX', url: 'https://bellavista.example', seo_score: 41, speed_score: 55, mobile_score: 38, status: 'contacted', notes: 'Menu not mobile-friendly' },
+  { id: 'a1202e9f-6a5c-4d1f-8a0e-000000000003', name: 'Greenleaf Landscaping Co.', niche: 'Landscaping', location: 'Denver, CO', url: 'https://greenleaf.example', seo_score: 22, speed_score: 35, mobile_score: 30, status: 'interested', notes: 'No contact form' },
 ];
+const normaliseLead = lead => ({ ...lead, seoScore: Number(lead.seo_score ?? lead.seoScore ?? 0), speedScore: Number(lead.speed_score ?? lead.speedScore ?? 0), mobileScore: Number(lead.mobile_score ?? lead.mobileScore ?? 0), status: lead.status || 'new' });
+let demoLeads = DEMO_LEADS.map(normaliseLead);
 
-const scoreClass = s => s >= 70 ? 'good' : s >= 40 ? 'avg' : 'poor';
-const scoreColor = s => s >= 70 ? '#10B981' : s >= 40 ? '#F59E0B' : '#EF4444';
-const statusBadge = {
-  new:'badge-blue', contacted:'badge-yellow', interested:'badge-blue',
-  proposal:'badge-yellow', won:'badge-green', lost:'badge-gray'
-};
-
-/* ── NAVBAR & MOBILE MENU ───────────────────────────────────────── */
-function initNavbar() {
-  const navbar = document.querySelector('.navbar');
-  if (navbar) {
-    window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', scrollY > 30), { passive:true });
+function demoApi(method, suffix = '', body) {
+  const [route, query = ''] = suffix.split('?');
+  if (method === 'GET' && route === '/search') {
+    const params = new URLSearchParams(query); const niche = (params.get('niche') || '').toLowerCase(); const location = (params.get('location') || '').toLowerCase();
+    const data = demoLeads.filter(lead => (!niche || lead.niche.toLowerCase().includes(niche)) && (!location || lead.location.toLowerCase().includes(location)));
+    return { ok: true, status: 200, data: { data, total: data.length, demo: true }, error: '' };
   }
-  const ham = document.getElementById('hamburger');
-  const mobileNav = document.getElementById('mobile-nav');
-  if (ham && mobileNav) {
-    ham.addEventListener('click', () => {
-      mobileNav.classList.toggle('open');
-      ham.setAttribute('aria-expanded', mobileNav.classList.contains('open'));
-    });
-    // close button inside mobile nav
-    const closeBtn = mobileNav.querySelector('.mobile-nav-close');
-    if (closeBtn) closeBtn.addEventListener('click', () => mobileNav.classList.remove('open'));
-  }
+  if (method === 'GET' && (!route || route === '/')) return { ok: true, status: 200, data: { data: demoLeads, total: demoLeads.length, demo: true }, error: '' };
+  const id = route.replace(/^\//, ''); const index = demoLeads.findIndex(lead => lead.id === id);
+  if (method === 'GET') return index === -1 ? { ok: false, status: 404, data: null, error: 'Lead not found.' } : { ok: true, status: 200, data: { data: demoLeads[index], demo: true }, error: '' };
+  if (method === 'POST' && (!route || route === '/')) { const lead = normaliseLead({ ...body, id: crypto.randomUUID(), created_at: new Date().toISOString() }); demoLeads.unshift(lead); return { ok: true, status: 201, data: { data: lead, demo: true }, error: '' }; }
+  if (index === -1) return { ok: false, status: 404, data: null, error: 'Lead not found.' };
+  if (method === 'PATCH') { demoLeads[index] = normaliseLead({ ...demoLeads[index], ...body }); return { ok: true, status: 200, data: { data: demoLeads[index], demo: true }, error: '' }; }
+  if (method === 'DELETE') { demoLeads.splice(index, 1); return { ok: true, status: 204, data: null, error: '' }; }
+  return { ok: false, status: 405, data: null, error: 'Unsupported demo operation.' };
 }
 
-/* ── SIDEBAR (app pages) ────────────────────────────────────────── */
-function initSidebar() {
-  const toggle = document.querySelector('.sidebar-toggle');
-  const sidebar = document.querySelector('.sidebar');
-  const overlay = document.querySelector('.sidebar-overlay');
-  if (!toggle || !sidebar) return;
-  const close = () => { sidebar.classList.remove('open'); overlay?.classList.remove('show'); document.body.style.overflow=''; };
-  toggle.addEventListener('click', () => { sidebar.classList.add('open'); overlay?.classList.add('show'); document.body.style.overflow='hidden'; });
-  overlay?.addEventListener('click', close);
+async function leadApi(method, suffix = '', body) {
+  if (Auth.demo()) return demoApi(method, suffix, body);
+  return API.request(method, `/leads${suffix}`, body);
+}
+async function getLeads(suffix = '') {
+  const result = await leadApi('GET', suffix);
+  if (result.ok) return (result.data?.data || []).map(normaliseLead);
+  throw new Error(result.error);
 }
 
-/* ── PROGRESS BARS (animated on load) ──────────────────────────── */
-function animateProgressBars() {
-  document.querySelectorAll('.progress-fill[data-score]').forEach(el => {
-    const score = parseInt(el.dataset.score) || 0;
-    el.style.width = '0%';
-    el.style.background = scoreColor(score);
-    requestAnimationFrame(() => setTimeout(() => { el.style.width = score + '%'; }, 80));
-  });
+const PROTECTED_ROUTE_NAMES = new Set(['dashboard', 'search', 'reports', 'crm', 'settings']);
+function routeName(pathname = location.pathname) {
+  const segments = pathname.split('/').filter(Boolean);
+  return (segments.at(-1) || 'index').replace(/\.html$/i, '').toLowerCase();
 }
-
-/* ── DASHBOARD PAGE ─────────────────────────────────────────────── */
-function initDashboard() {
-  const el = document.getElementById('stat-leads');
-  if (!el) return;
-
-  const leads = Store.getAll().length > 0 ? Store.getAll() : LEADS;
-  document.getElementById('stat-leads').textContent    = leads.length;
-  document.getElementById('stat-contacted').textContent = leads.filter(l => l.status === 'contacted' || l.status === 'interested').length;
-  document.getElementById('stat-audits').textContent   = Math.floor(leads.length * 1.4);
-  document.getElementById('stat-revenue').textContent  = '$' + (leads.filter(l=>l.status==='won').length * 2800).toLocaleString();
-
-  const tbody = document.getElementById('recent-leads-list');
-  if (!tbody) return;
-  tbody.innerHTML = leads.slice(0,6).map(l => `
-    <tr>
-      <td><strong style="color:var(--gray-900)">${l.name}</strong></td>
-      <td>${l.niche}</td>
-      <td>${l.location}</td>
-      <td><span class="badge ${statusBadge[l.status]||'badge-gray'}">${l.status}</span></td>
-      <td style="color:var(--gray-400);font-size:.78rem">Just now</td>
-    </tr>`).join('');
+function protectedPage() { return PROTECTED_ROUTE_NAMES.has(routeName()); }
+function loginTarget() { return location.pathname.toLowerCase().endsWith('.html') ? 'login.html' : '/login'; }
+function ensureAccess() {
+  if (!protectedPage()) return true;
+  const query = new URLSearchParams(location.search);
+  const hash = new URLSearchParams(location.hash.replace(/^#/, ''));
+  if (query.get('demo') === '1' || hash.get('demo') === '1') Auth.enableDemo();
+  if (!Auth.loggedIn() && !Auth.demo()) { location.replace(loginTarget()); return false; }
+  return true;
 }
+function tag(name, className, content) { const node = document.createElement(name); if (className) node.className = className; if (content !== undefined) node.textContent = content; return node; }
+function action(label, className, handler) { const node = tag('button', className, label); node.type = 'button'; node.addEventListener('click', handler); return node; }
+function empty(title, detail) { const node = tag('div', 'empty-state'); node.append(tag('h3', '', title), tag('p', '', detail)); return node; }
+function date(value) { return new Date(value || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
 
-/* ── SEARCH PAGE ────────────────────────────────────────────────── */
-const SearchPage = {
-  filteredLeads: [...LEADS],
-  init() {
-    if (!document.getElementById('leads-container')) return;
-    this.render(LEADS);
-
-    const form = document.getElementById('search-form');
-    form?.addEventListener('submit', e => { e.preventDefault(); this.doSearch(); });
-
-    document.getElementById('sort-select')?.addEventListener('change', e => {
-      const v = e.target.value;
-      const sorted = [...this.filteredLeads].sort((a,b) =>
-        v==='worst-seo' ? a.seoScore-b.seoScore :
-        v==='worst-speed' ? a.speedScore-b.speedScore :
-        v==='worst-mobile' ? a.mobileScore-b.mobileScore : 0);
-      this.render(sorted);
-    });
-  },
-  doSearch() {
-    const niche = (document.getElementById('niche-input')?.value || '').trim().toLowerCase();
-    const loc   = (document.getElementById('location-input')?.value || '').trim().toLowerCase();
-    const btn   = document.getElementById('search-btn');
-    if (btn) { btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Searching…'; }
-
-    setTimeout(() => {
-      this.filteredLeads = LEADS.filter(l =>
-        (!niche || l.niche.toLowerCase().includes(niche) || l.name.toLowerCase().includes(niche)) &&
-        (!loc   || l.location.toLowerCase().includes(loc))
-      );
-      this.render(this.filteredLeads);
-      if (btn) { btn.disabled=false; btn.textContent='🔍 Search'; }
-      Toast.success(`${this.filteredLeads.length} leads found`);
-    }, 700);
-  },
-  render(leads) {
-    const c = document.getElementById('leads-container');
-    const countEl = document.getElementById('results-count');
-    if (!c) return;
-    if (countEl) countEl.textContent = leads.length + ' results';
-
-    if (!leads.length) {
-      c.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
-        <div class="empty-icon">🔍</div><h3>No leads found</h3>
-        <p>Try a different niche or location</p></div>`;
-      return;
-    }
-
-    const saved = Store.getAll();
-    c.innerHTML = leads.map(l => {
-      const isSaved = saved.find(s => s.id === l.id);
-      return `<div class="glass-card lead-card fade-in">
-        <div class="lead-card-top">
-          <div><div class="lead-name">${l.name}</div><div class="lead-meta">${l.niche} · ${l.location}</div></div>
-          <span class="badge ${l.seoScore<40?'badge-red':l.seoScore<60?'badge-yellow':'badge-green'}">${Math.round((l.seoScore+l.speedScore+l.mobileScore)/3)}</span>
-        </div>
-        <div class="lead-url">🌐 ${l.url}</div>
-        <div class="lead-scores">
-          <span class="score-pill"><span class="score-dot ${scoreClass(l.seoScore)}"></span>SEO ${l.seoScore}</span>
-          <span class="score-pill"><span class="score-dot ${scoreClass(l.speedScore)}"></span>Speed ${l.speedScore}</span>
-          <span class="score-pill"><span class="score-dot ${scoreClass(l.mobileScore)}"></span>Mobile ${l.mobileScore}</span>
-        </div>
-        <div class="lead-actions">
-          <button class="btn btn-primary btn-sm save-btn" data-id="${l.id}" ${isSaved?'disabled':''}>
-            ${isSaved?'✓ Saved':'💾 Save Lead'}
-          </button>
-          <a href="reports.html?id=${l.id}" class="btn btn-secondary btn-sm">📊 Audit</a>
-        </div>
-      </div>`;
-    }).join('');
-
-    c.querySelectorAll('.save-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const lead = LEADS.find(l => l.id === parseInt(btn.dataset.id));
-        if (lead && Store.add(lead)) {
-          btn.disabled = true; btn.textContent = '✓ Saved';
-          Toast.success('Lead saved!', lead.name + ' added to CRM');
-        } else {
-          Toast.info('Already saved', 'This lead is in your CRM');
-        }
-      });
-    });
-  }
-};
-
-/* expose for inline onclick */
-window.quickSearch = function(niche, loc) {
-  const n = document.getElementById('niche-input');
-  const l = document.getElementById('location-input');
-  if (n) n.value = niche;
-  if (l) l.value = loc;
-  SearchPage.doSearch();
-};
-
-/* ── REPORTS PAGE ───────────────────────────────────────────────── */
-function initReports() {
-  if (!document.getElementById('report-section')) return;
-
-  // Set audit date
-  const dateEl = document.getElementById('audit-date');
-  if (dateEl) dateEl.textContent = new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
-
-  // If a lead id is passed, override scores
-  const params = new URLSearchParams(location.search);
-  const id = parseInt(params.get('id'));
-  if (id) {
-    const lead = LEADS.find(l => l.id === id);
-    if (lead) {
-      document.querySelectorAll('.audit-business-name').forEach(el => el.textContent = lead.name);
-      document.querySelectorAll('.audit-url').forEach(el => el.textContent = '🌐 ' + lead.url);
-      const scores = { seo: lead.seoScore, speed: lead.speedScore, mobile: lead.mobileScore };
-      ['seo','speed','mobile'].forEach(k => {
-        const el = document.getElementById('score-' + k);
-        if (el) {
-          el.textContent = scores[k];
-          const circle = el.closest('.score-circle');
-          if (circle) { circle.className = 'score-circle ' + scoreClass(scores[k]); }
-        }
-      });
-      // Update progress bars
-      document.querySelectorAll('.progress-fill[data-score]').forEach(bar => {
-        const key = bar.dataset.key;
-        if (key && scores[key] !== undefined) {
-          bar.dataset.score = scores[key];
-          bar.closest('div').previousElementSibling?.querySelector('span:last-child')?.textContent
-          bar.closest('.score-row')?.querySelector('.score-label-val')?.textContent;
-        }
-      });
-    }
-  }
-  animateProgressBars();
-}
-
-window.generateOutreach = function() {
-  document.getElementById('outreach-modal')?.classList.add('open');
-};
-
-window.copyOutreach = function() {
-  const text = document.getElementById('outreach-text')?.textContent || '';
-  navigator.clipboard.writeText(text.trim())
-    .then(() => Toast.success('Copied!', 'Email copied to clipboard'))
-    .catch(() => Toast.error('Copy failed', 'Please select and copy manually'));
-};
-
-window.loadDemoReport = function() {
-  animateProgressBars();
-  Toast.success('Demo report loaded!');
-};
-
-/* ── CRM PAGE ───────────────────────────────────────────────────── */
-const CRM = {
-  filter: 'all',
-  editId: null,
-
-  getLeads() {
-    const stored = Store.getAll();
-    return stored.length ? stored : LEADS;
-  },
-
-  init() {
-    if (!document.getElementById('crm-table-body')) return;
-    this.render();
-    this.bindEvents();
-    this.updateStats();
-  },
-
-  bindEvents() {
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        this.filter = btn.dataset.filter;
-        this.render();
-      });
-    });
-
-    document.getElementById('crm-search-input')?.addEventListener('input', e => {
-      const q = e.target.value.toLowerCase();
-      document.querySelectorAll('#crm-table-body tr').forEach(row => {
-        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
-      });
-    });
-
-    document.getElementById('modal-save-btn')?.addEventListener('click', () => this.saveEdit());
-    document.getElementById('modal-cancel-btn')?.addEventListener('click', () => this.closeModal());
-    document.getElementById('edit-modal')?.addEventListener('click', e => {
-      if (e.target === e.currentTarget) this.closeModal();
-    });
-  },
-
-  updateStats() {
-    const leads = this.getLeads();
-    const set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
-    set('crm-stat-total', leads.length);
-    set('crm-stat-contacted', leads.filter(l=>l.status==='contacted').length);
-    set('crm-stat-proposal', leads.filter(l=>l.status==='proposal').length);
-    set('crm-stat-won', leads.filter(l=>l.status==='won').length);
-  },
-
-  render() {
-    const tbody = document.getElementById('crm-table-body');
-    if (!tbody) return;
-    let leads = this.getLeads();
-    if (this.filter !== 'all') leads = leads.filter(l => l.status === this.filter);
-
-    if (!leads.length) {
-      tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
-        <div class="empty-icon">📋</div><h3>No leads</h3>
-        <p>No leads match this filter. <a href="search.html">Find leads →</a></p></div></td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = leads.map(l => `<tr>
-      <td>
-        <div style="font-weight:600;color:var(--gray-900)">${l.name}</div>
-        <div style="font-size:.72rem;color:var(--gray-400)">${l.url}</div>
-      </td>
-      <td>${l.niche}</td>
-      <td>${l.location}</td>
-      <td>
-        <select class="form-select" style="padding:5px 8px;font-size:.78rem;width:auto"
-          onchange="CRM.changeStatus(${l.id}, this.value)">
-          ${['new','contacted','interested','proposal','won','lost']
-            .map(s=>`<option value="${s}" ${l.status===s?'selected':''}>${s.charAt(0).toUpperCase()+s.slice(1)}</option>`).join('')}
-        </select>
-      </td>
-      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.8rem"
-        title="${l.notes||''}">${l.notes||'—'}</td>
-      <td>
-        <span class="badge ${l.seoScore<40?'badge-red':l.seoScore<60?'badge-yellow':'badge-green'}">${l.seoScore}/100</span>
-      </td>
-      <td>
-        <div class="action-btns">
-          <button class="btn btn-sm btn-secondary" onclick="CRM.openEdit(${l.id})" title="Edit">✏️</button>
-          <a href="reports.html?id=${l.id}" class="btn btn-sm btn-secondary" title="Audit">📊</a>
-          <button class="btn btn-sm btn-danger" onclick="CRM.deleteLead(${l.id})" title="Delete">🗑️</button>
-        </div>
-      </td>
-    </tr>`).join('');
-  },
-
-  changeStatus(id, status) {
-    if (!Store.update(id, { status })) {
-      const lead = LEADS.find(l => l.id === id);
-      if (lead) Store.add({ ...lead, status });
-    }
-    this.updateStats();
-    Toast.success('Status updated', 'Changed to ' + status);
-  },
-
-  openEdit(id) {
-    const all = [...Store.getAll(), ...LEADS];
-    const lead = all.find(l => l.id === id);
-    if (!lead) return;
-    this.editId = id;
-    document.getElementById('edit-name').value  = lead.name;
-    document.getElementById('edit-status').value = lead.status;
-    document.getElementById('edit-notes').value  = lead.notes || '';
-    document.getElementById('edit-modal')?.classList.add('open');
-  },
-
-  closeModal() {
-    document.getElementById('edit-modal')?.classList.remove('open');
-    this.editId = null;
-  },
-
-  saveEdit() {
-    if (!this.editId) return;
-    const patch = {
-      name:   document.getElementById('edit-name')?.value.trim(),
-      status: document.getElementById('edit-status')?.value,
-      notes:  document.getElementById('edit-notes')?.value.trim(),
-    };
-    if (!patch.name) { Toast.warning('Name required'); return; }
-    if (!Store.update(this.editId, patch)) {
-      const lead = LEADS.find(l => l.id === this.editId);
-      if (lead) Store.add({ ...lead, ...patch });
-    }
-    this.closeModal(); this.render(); this.updateStats();
-    Toast.success('Lead updated');
-  },
-
-  deleteLead(id) {
-    if (!confirm('Delete this lead permanently?')) return;
-    Store.remove(id);
-    this.render(); this.updateStats();
-    Toast.success('Lead deleted');
-  }
-};
-
-/* ── SETTINGS PAGE ──────────────────────────────────────────────── */
-function initSettings() {
-  if (!document.getElementById('settings-content')) return;
-
-  // Load saved profile
-  const p = JSON.parse(localStorage.getItem('wcha-profile') || '{}');
-  ['name','email','company','website'].forEach(f => {
-    const el = document.getElementById('s-' + f);
-    if (el && p[f]) el.value = p[f];
-  });
-
-  // Dark mode toggle sync
-  const dt = document.getElementById('dark-mode-toggle');
-  if (dt) { dt.checked = localStorage.getItem('wcha-theme') === 'dark';
-    dt.addEventListener('change', e => Theme.apply(e.target.checked ? 'dark' : 'light')); }
-
-  // Settings nav tabs
-  document.querySelectorAll('.settings-nav-item').forEach(item => {
-    item.addEventListener('click', () => {
-      document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
-      document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
-      item.classList.add('active');
-      document.getElementById(item.dataset.panel)?.classList.add('active');
-    });
-  });
-
-  // Save profile
-  document.getElementById('save-profile-btn')?.addEventListener('click', () => {
-    const data = {};
-    ['name','email','company','website'].forEach(f => {
-      data[f] = document.getElementById('s-' + f)?.value || '';
-    });
-    localStorage.setItem('wcha-profile', JSON.stringify(data));
-    Toast.success('Profile saved!');
-  });
-
-  // API key show/hide
-  document.querySelectorAll('.api-key-toggle').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const inp = btn.closest('.api-key-field')?.querySelector('.form-input');
-      if (!inp) return;
-      inp.type = inp.type === 'password' ? 'text' : 'password';
-      btn.textContent = inp.type === 'password' ? '👁️' : '🙈';
-    });
-  });
-
-  document.getElementById('save-api-btn')?.addEventListener('click', () => Toast.success('API settings saved'));
-  document.getElementById('test-api-btn')?.addEventListener('click', () => {
-    Toast.info('Testing…', 'Checking connections');
-    setTimeout(() => Toast.success('All APIs connected!'), 1600);
-  });
-}
-
-/* ── INIT ───────────────────────────────────────────────────────── */
-document.addEventListener('DOMContentLoaded', () => {
+function initShell() {
   Theme.init();
-  initNavbar();
-  initSidebar();
+  document.querySelectorAll('.dark-toggle').forEach(node => node.addEventListener('click', () => Theme.toggle()));
+  const toggle = document.querySelector('.sidebar-toggle'), sidebar = document.querySelector('.sidebar'), overlay = document.querySelector('.sidebar-overlay');
+  const close = () => { sidebar?.classList.remove('open'); overlay?.classList.remove('show'); document.body.style.overflow = ''; };
+  toggle?.addEventListener('click', () => { sidebar?.classList.add('open'); overlay?.classList.add('show'); document.body.style.overflow = 'hidden'; }); overlay?.addEventListener('click', close);
+  const hamburger = $('hamburger'), mobile = $('mobile-nav'); hamburger?.addEventListener('click', () => hamburger.setAttribute('aria-expanded', String(mobile?.classList.toggle('open'))));
+  const user = Auth.user(); const name = Auth.demo() ? 'Demo workspace' : (user?.name || user?.email || 'Account');
+  text(document.querySelector('.sidebar-user-name'), name); text(document.querySelector('.avatar'), name.slice(0, 2).toUpperCase());
+  $('logout-btn')?.addEventListener('click', async () => { if (Auth.loggedIn()) await API.post('/auth/logout', {}); Auth.clear(); Auth.clearDemo(); location.assign(loginTarget()); });
+}
 
-  document.querySelectorAll('.dark-toggle').forEach(b => b.addEventListener('click', () => Theme.toggle()));
+function oauthCallbackUrl() { return new URL('/auth/callback', location.origin).toString(); }
 
-  initDashboard();
-  SearchPage.init();
-  initReports();
-  CRM.init();
-  initSettings();
-  animateProgressBars();
-});
+async function startOAuth(provider, button) {
+  const base = apiBase();
+  if (!base) return Toast.error('Provider sign-in is unavailable', 'Configure the public API URL before using Google or GitHub sign-in.');
+  setBusy(button, true, `Connecting to ${provider === 'google' ? 'Google' : 'GitHub'}…`);
+  try {
+    const url = new URL(`${base}/api/auth/oauth/${encodeURIComponent(provider)}`);
+    url.searchParams.set('redirectTo', oauthCallbackUrl());
+    const response = await fetch(url, { headers: { Accept: 'application/json' } });
+    const payload = (response.headers.get('content-type') || '').includes('application/json') ? await response.json() : null;
+    if (!response.ok || !payload?.url) return Toast.error('Provider sign-in is unavailable', payload?.error || 'Check that this provider is enabled in Supabase.');
+    location.assign(payload.url);
+  } catch {
+    Toast.error('Provider sign-in could not start', 'Check your internet connection and public API URL.');
+  } finally {
+    setBusy(button, false);
+  }
+}
+
+function initOAuthCallback() {
+  if (routeName() !== 'callback') return;
+  const title = $('oauth-callback-title'), message = $('oauth-callback-message'), actions = $('oauth-callback-actions');
+  const complete = (heading, detail) => { text(title, heading); text(message, detail); actions?.removeAttribute('hidden'); };
+  const params = new URLSearchParams(location.hash.replace(/^#/, ''));
+  const providerError = params.get('error_description') || params.get('error');
+  const accessToken = params.get('access_token');
+  if (providerError) return complete('Sign-in was not completed', providerError);
+  if (!accessToken) return complete('Sign-in link is invalid', 'No provider session was returned. Start sign-in again from the login page.');
+
+  (async () => {
+    const result = await API.post('/auth/session', { accessToken });
+    if (!result.ok || !result.data?.token || !result.data?.user) {
+      return complete('Sign-in could not be verified', result.error || 'Start sign-in again from the login page.');
+    }
+    Auth.clearDemo();
+    Auth.set({ token: result.data.token, user: result.data.user });
+    history.replaceState({}, document.title, location.pathname);
+    text(title, 'Sign-in complete');
+    text(message, 'Taking you to your dashboard…');
+    setTimeout(() => location.replace('/dashboard'), 180);
+  })().catch(() => complete('Sign-in could not be verified', 'Start sign-in again from the login page.'));
+}
+
+function initLogin() {
+  const form = $('login-form'); if (!form) return;
+  if (Auth.loggedIn() || Auth.demo()) return location.assign(location.pathname.toLowerCase().endsWith('.html') ? 'dashboard.html' : '/dashboard');
+  document.querySelectorAll('.auth-tab').forEach(tab => tab.addEventListener('click', () => { document.querySelectorAll('.auth-tab').forEach(node => node.classList.remove('active')); document.querySelectorAll('.auth-panel').forEach(node => node.classList.remove('active')); tab.classList.add('active'); $(tab.dataset.panel)?.classList.add('active'); }));
+  document.querySelectorAll('[data-oauth-provider]').forEach(button => button.addEventListener('click', () => startOAuth(button.dataset.oauthProvider, button)));
+  form.addEventListener('submit', async event => {
+    event.preventDefault(); const email = $('login-email')?.value.trim(), password = $('login-password')?.value || '';
+    if (!email || !password) return Toast.warning('Enter your email and password.');
+    const submit = form.querySelector('button[type="submit"]'); setBusy(submit, true, 'Signing in…');
+    try {
+      const result = await API.post('/auth/login', { email, password });
+      if (!result.ok || !result.data?.token) return Toast.error('Sign-in failed', result.error);
+      Auth.set({ token: result.data.token, user: result.data.user }); Toast.success('Signed in.'); setTimeout(() => location.assign('dashboard.html'), 300);
+    } finally { setBusy(submit, false); }
+  });
+  $('signup-form')?.addEventListener('submit', async event => {
+    event.preventDefault(); const name = $('signup-name')?.value.trim(), email = $('signup-email')?.value.trim(), password = $('signup-password')?.value || '';
+    if (!name || !email || !password) return Toast.warning('Complete every required field.'); if (password.length < 12) return Toast.warning('Use at least 12 password characters.');
+    const submit = $('signup-form')?.querySelector('button[type="submit"]'); setBusy(submit, true, 'Creating account…');
+    try {
+      const result = await API.post('/auth/signup', { name, email, password }); if (!result.ok) return Toast.error('Account creation failed', result.error); Toast.success('Account created', result.data?.message || 'Check your email before signing in.');
+    } finally { setBusy(submit, false); }
+  });
+}
+
+async function initDashboard() {
+  if (!$('stat-leads')) return;
+  try {
+    const leads = await getLeads(); text($('stat-leads'), leads.length); text($('stat-contacted'), leads.filter(lead => ['contacted', 'interested'].includes(lead.status)).length); text($('stat-audits'), leads.length); text($('stat-revenue'), `$${(leads.filter(lead => lead.status === 'won').length * 2800).toLocaleString()}`);
+    const table = $('recent-leads-list'); if (!table) return; table.replaceChildren();
+    if (!leads.length) { const row = document.createElement('tr'), cell = document.createElement('td'); cell.colSpan = 5; cell.appendChild(empty('No leads yet', 'Run an audit to begin building your pipeline.')); row.appendChild(cell); return table.appendChild(row); }
+    leads.slice(0, 6).forEach(lead => { const row = document.createElement('tr'); const business = document.createElement('td'); business.append(tag('strong', '', lead.name), tag('div', '', lead.url)); business.lastChild.style.cssText = 'font-size:.72rem;color:var(--gray-400)'; row.appendChild(business); [lead.niche || '—', lead.location || '—'].forEach(value => row.appendChild(tag('td', '', value))); const status = tag('td'); status.appendChild(tag('span', `badge ${statusClass[lead.status] || 'badge-gray'}`, lead.status)); row.appendChild(status); row.appendChild(tag('td', '', date(lead.created_at))); table.appendChild(row); });
+  } catch (error) { Toast.error('Could not load dashboard', error.message); }
+}
+
+const SearchPage = {
+  leads: [],
+  async init() { if (!$('leads-container')) return; $('search-form')?.addEventListener('submit', event => { event.preventDefault(); this.search(); }); $('sort-select')?.addEventListener('change', () => this.render(this.sort(this.leads))); await this.search(); },
+  sort(leads) { const order = $('sort-select')?.value; return [...leads].sort((a, b) => order === 'worst-seo' ? a.seoScore - b.seoScore : order === 'worst-speed' ? a.speedScore - b.speedScore : order === 'worst-mobile' ? a.mobileScore - b.mobileScore : 0); },
+  async search() { const params = new URLSearchParams(); const niche = $('niche-input')?.value.trim(), location = $('location-input')?.value.trim(); const button = $('search-btn'); const container = $('leads-container'); if (niche) params.set('niche', niche); if (location) params.set('location', location); setBusy(button, true, 'Searching…'); container?.setAttribute('aria-busy', 'true'); try { const result = await leadApi('GET', `/search${params.size ? `?${params}` : ''}`); if (!result.ok) return Toast.error('Could not search leads', result.error); this.leads = (result.data?.data || []).map(normaliseLead); this.render(this.sort(this.leads)); } finally { setBusy(button, false); container?.removeAttribute('aria-busy'); } },
+  render(leads) { const container = $('leads-container'); if (!container) return; text($('results-count'), `${leads.length} lead${leads.length === 1 ? '' : 's'}`); container.replaceChildren(); if (!leads.length) return container.appendChild(empty('No saved leads match', 'Run an audit and save a lead to build your pipeline.')); leads.forEach(lead => { const card = tag('article', 'glass-card lead-card fade-in'); const top = tag('div', 'lead-card-top'), info = tag('div'); info.append(tag('div', 'lead-name', lead.name), tag('div', 'lead-meta', `${lead.niche || 'Uncategorised'} · ${lead.location || 'No location'}`)); const overall = Math.round((lead.seoScore + lead.speedScore + lead.mobileScore) / 3); top.append(info, tag('span', `badge ${overall < 40 ? 'badge-red' : overall < 60 ? 'badge-yellow' : 'badge-green'}`, `${overall}/100`)); const scores = tag('div', 'lead-scores'); [['SEO', lead.seoScore], ['Speed', lead.speedScore], ['Mobile', lead.mobileScore]].forEach(([label, value]) => { const pill = tag('span', 'score-pill'); pill.append(tag('span', `score-dot ${scoreClass(value)}`), document.createTextNode(`${label} ${value}`)); scores.appendChild(pill); }); const audit = tag('a', 'btn btn-primary btn-sm', 'Run Audit'); audit.href = `reports.html?id=${encodeURIComponent(lead.id)}`; card.append(top, tag('div', 'lead-url', `Website: ${lead.url}`), scores, audit); container.appendChild(card); }); },
+};
+window.quickSearch = (niche, location = '') => { if ($('niche-input')) $('niche-input').value = niche; if ($('location-input')) $('location-input').value = location; SearchPage.search(); };
+
+let report = null, selectedLead = null;
+function scores(seo, speed, mobile) { [['score-seo', seo], ['score-speed', speed], ['score-mobile', mobile]].forEach(([id, value]) => { const node = $(id); if (!node) return; node.textContent = value; const circle = node.closest('.score-circle'); if (circle) circle.className = `score-circle ${scoreClass(value)}`; }); document.querySelectorAll('.progress-fill[data-key]').forEach(node => { const value = { seo, speed, mobile }[node.dataset.key]; if (value !== undefined) { node.dataset.score = value; node.style.width = `${value}%`; node.style.background = scoreColor(value); } }); }
+function renderIssues(issues) { const list = $('dynamic-issues'); if (!list) return; list.replaceChildren(); if (!issues.length) return list.appendChild(empty('No issues detected', 'The audit returned no findings.')); issues.forEach(issue => { const item = tag('div', 'issue-item'), content = tag('div'); content.append(tag('div', 'issue-title', issue.title), tag('div', 'issue-desc', issue.desc), tag('span', `badge ${issue.severity === 'high' ? 'badge-red' : issue.severity === 'medium' ? 'badge-yellow' : 'badge-gray'}`, issue.severity)); item.append(tag('div', 'issue-icon', issue.severity === 'high' ? '!' : 'i'), content); list.appendChild(item); }); }
+function demoReport(url) { return { url, scores: { seo: 42, speed: 38, mobile: 54, security: 45 }, issues: [{ severity: 'high', title: 'Demo finding: slow response', desc: 'This sample result is shown only in explicit demo mode.' }, { severity: 'medium', title: 'Demo finding: missing structured data', desc: 'Run a real audit for live results.' }] }; }
+async function initReports() {
+  if (!$('report-section')) return; text($('audit-date'), new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
+  const id = new URLSearchParams(location.search).get('id'); if (id) { const result = await leadApi('GET', `/${encodeURIComponent(id)}`); if (result.ok && result.data?.data) { selectedLead = normaliseLead(result.data.data); $('audit-url-input').value = selectedLead.url; document.querySelectorAll('.audit-business-name').forEach(node => text(node, selectedLead.name)); document.querySelectorAll('.audit-url').forEach(node => text(node, selectedLead.url)); scores(selectedLead.seoScore, selectedLead.speedScore, selectedLead.mobileScore); } }
+  $('audit-form')?.addEventListener('submit', async event => { event.preventDefault(); const url = $('audit-url-input')?.value.trim(); if (!url) return Toast.warning('Enter a website URL.'); const button = $('run-audit-btn'); setBusy(button, true, 'Auditing…'); try { if (Auth.demo()) report = demoReport(url); else { const result = await API.post('/audit', { url, ...(selectedLead ? { leadId: selectedLead.id } : {}) }); if (!result.ok) return Toast.error('Audit failed', result.error); report = result.data?.data; } document.querySelectorAll('.audit-business-name').forEach(node => text(node, selectedLead?.name || report.url)); document.querySelectorAll('.audit-url').forEach(node => text(node, report.url)); scores(report.scores.seo, report.scores.speed, report.scores.mobile); renderIssues(report.issues || []); Toast.success('Audit complete.'); } finally { setBusy(button, false); } });
+}
+window.loadDemoReport = () => { if (!Auth.demo()) return Toast.info('Open the explicit demo to view a sample report.'); report = demoReport($('audit-url-input')?.value.trim() || 'https://example.com'); scores(report.scores.seo, report.scores.speed, report.scores.mobile); renderIssues(report.issues); Toast.success('Demo report loaded.'); };
+window.generateOutreach = async () => { const modal = $('outreach-modal'), output = $('outreach-text'); if (!report) return Toast.warning('Run an audit first.'); if (!modal || !output) return; modal.classList.add('open'); output.textContent = 'Generating outreach…'; if (Auth.demo()) { output.textContent = `Subject: A quick website observation\n\nHi ${selectedLead?.name || 'there'},\n\nI reviewed ${report.url} and noticed ${report.issues[0]?.title?.toLowerCase() || 'an issue worth improving'}. I can share a concise breakdown and practical next steps.\n\nWould a 15-minute call be useful?\n\nBest,\nYour Agency`; return; } const user = Auth.user(); const result = await API.post('/outreach/generate', { businessName: selectedLead?.name || new URL(report.url).hostname, url: report.url, senderName: user?.name || user?.email || 'Your Name', senderCompany: user?.company || '', scores: { seo: report.scores.seo, speed: report.scores.speed, mobile: report.scores.mobile }, issues: report.issues || [], ...(selectedLead ? { leadId: selectedLead.id } : {}) }); if (!result.ok) { output.textContent = ''; return Toast.error('Could not generate outreach', result.error); } output.textContent = result.data?.data?.email || ''; };
+window.copyOutreach = () => { const value = $('outreach-text')?.textContent.trim(); if (!value) return Toast.warning('There is no email to copy.'); navigator.clipboard.writeText(value).then(() => Toast.success('Email copied.')).catch(() => Toast.error('Copy failed', 'Select the text and copy it manually.')); };
+
+const CRM = {
+  filter: 'all', editId: null,
+  async init() { if (!$('crm-table-body')) return; $('modal-save-btn')?.addEventListener('click', () => this.save()); $('modal-cancel-btn')?.addEventListener('click', () => this.close()); $('modal-cancel-btn2')?.addEventListener('click', () => this.close()); $('crm-search-input')?.addEventListener('input', event => document.querySelectorAll('#crm-table-body tr').forEach(row => { row.hidden = !row.textContent.toLowerCase().includes(event.target.value.toLowerCase()); })); document.querySelectorAll('.filter-btn').forEach(node => node.addEventListener('click', async () => { this.filter = node.dataset.filter || 'all'; document.querySelectorAll('.filter-btn').forEach(item => item.classList.remove('active')); node.classList.add('active'); await this.render(); })); await this.render(); await this.updateStats(); },
+  async list() { return getLeads(); },
+  async updateStats() { try { const leads = await this.list(); text($('crm-stat-total'), leads.length); text($('crm-stat-contacted'), leads.filter(lead => lead.status === 'contacted').length); text($('crm-stat-proposal'), leads.filter(lead => lead.status === 'proposal').length); text($('crm-stat-won'), leads.filter(lead => lead.status === 'won').length); } catch {} },
+  async render() { const body = $('crm-table-body'); if (!body) return; body.replaceChildren(); try { let leads = await this.list(); if (this.filter !== 'all') leads = leads.filter(lead => lead.status === this.filter); if (!leads.length) { const row = document.createElement('tr'), cell = document.createElement('td'); cell.colSpan = 7; cell.appendChild(empty('No leads', 'Run an audit and save a lead to start your pipeline.')); row.appendChild(cell); return body.appendChild(row); } leads.forEach(lead => body.appendChild(this.row(lead))); } catch (error) { const row = document.createElement('tr'), cell = document.createElement('td'); cell.colSpan = 7; cell.appendChild(empty('Could not load leads', error.message)); row.appendChild(cell); body.appendChild(row); } },
+  row(lead) { const row = document.createElement('tr'), business = tag('td'); business.append(tag('div', '', lead.name), tag('div', '', lead.url)); business.firstChild.style.cssText = 'font-weight:600;color:var(--gray-900)'; business.lastChild.style.cssText = 'font-size:.72rem;color:var(--gray-400)'; row.appendChild(business); row.append(tag('td', '', lead.niche || '—'), tag('td', '', lead.location || '—')); const status = document.createElement('select'); status.className = 'form-select'; ['new', 'contacted', 'interested', 'proposal', 'won', 'lost'].forEach(value => { const option = tag('option', '', value[0].toUpperCase() + value.slice(1)); option.value = value; option.selected = value === lead.status; status.appendChild(option); }); status.addEventListener('change', () => this.change(lead.id, { status: status.value })); const statusCell = tag('td'); statusCell.appendChild(status); row.appendChild(statusCell); const note = tag('td', '', lead.notes || '—'); note.title = lead.notes || ''; row.appendChild(note); const score = tag('td'); score.appendChild(tag('span', `badge ${lead.seoScore < 40 ? 'badge-red' : lead.seoScore < 60 ? 'badge-yellow' : 'badge-green'}`, `${lead.seoScore}/100`)); row.appendChild(score); const actions = tag('td'), wrap = tag('div', 'action-btns'); const edit = action('Edit', 'btn btn-sm btn-secondary', () => this.open(lead)); const audit = tag('a', 'btn btn-sm btn-secondary', 'Audit'); audit.href = `reports.html?id=${encodeURIComponent(lead.id)}`; const remove = action('Delete', 'btn btn-sm btn-danger', () => this.remove(lead.id)); wrap.append(edit, audit, remove); actions.appendChild(wrap); row.appendChild(actions); return row; },
+  async change(id, patch) { const result = await leadApi('PATCH', `/${id}`, patch); if (!result.ok) return Toast.error('Could not update lead', result.error); await this.updateStats(); Toast.success('Lead updated.'); },
+  open(lead) { this.editId = lead.id; $('edit-name').value = lead.name; $('edit-status').value = lead.status; $('edit-notes').value = lead.notes || ''; $('edit-modal')?.classList.add('open'); }, close() { $('edit-modal')?.classList.remove('open'); this.editId = null; },
+  async save() { if (!this.editId) return; const name = $('edit-name')?.value.trim(); if (!name) return Toast.warning('A lead name is required.'); const result = await leadApi('PATCH', `/${this.editId}`, { name, status: $('edit-status')?.value, notes: $('edit-notes')?.value.trim() || '' }); if (!result.ok) return Toast.error('Could not save lead', result.error); this.close(); await this.render(); await this.updateStats(); Toast.success('Lead saved.'); },
+  async remove(id) { if (!confirm('Delete this lead permanently?')) return; const result = await leadApi('DELETE', `/${id}`); if (!result.ok) return Toast.error('Could not delete lead', result.error); await this.render(); await this.updateStats(); Toast.success('Lead deleted.'); },
+};
+window.CRM = CRM;
+
+function initSettings() {
+  if (!$('settings-content')) return;
+  const activatePanel = panelId => {
+    document.querySelectorAll('.settings-nav-item').forEach(item => item.classList.toggle('active', item.dataset.panel === panelId));
+    document.querySelectorAll('.settings-panel').forEach(panel => panel.classList.toggle('active', panel.id === panelId));
+  };
+  document.querySelectorAll('.settings-nav-item[data-panel]').forEach(item => item.addEventListener('click', () => activatePanel(item.dataset.panel)));
+  let profile = {}; try { profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}'); } catch {}
+  const user = Auth.user() || {}; ['name', 'email', 'company', 'website'].forEach(field => { if ($(`s-${field}`)) $(`s-${field}`).value = profile[field] || user[field] || ''; });
+  $('save-profile-btn')?.addEventListener('click', async () => {
+    const next = {}; ['name', 'email', 'company', 'website'].forEach(field => { next[field] = $(`s-${field}`)?.value.trim() || ''; });
+    if (!next.name) return Toast.warning('A profile name is required.');
+    if (Auth.demo()) { localStorage.setItem(PROFILE_KEY, JSON.stringify(next)); return Toast.success('Demo profile saved locally.'); }
+    const result = await API.patch('/auth/profile', { name: next.name, company: next.company, website: next.website });
+    if (!result.ok) return Toast.error('Could not save profile', result.error);
+    const session = Auth.session(); if (session) { session.user = { ...session.user, ...result.data.data }; Auth.set(session); }
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(next)); Toast.success('Profile saved.');
+  });
+  $('save-api-btn')?.addEventListener('click', () => { const entered = $('backend-url')?.value.trim() || ''; const next = apiBase(entered); if (entered && next === DEFAULT_API_BASE && entered.replace(/\/$/, '') !== DEFAULT_API_BASE) return Toast.error('Invalid backend URL', 'Use HTTPS, or HTTP only for localhost.'); localStorage.setItem(API_URL_KEY, next); Toast.success('Backend URL saved', 'Reload to use the new backend.'); });
+  $('test-api-btn')?.addEventListener('click', async () => { const base = apiBase(); if (!base) return Toast.error('Backend not configured', 'Set the HTTPS API URL before testing the connection.'); try { const response = await fetch(`${base}/health`); const data = await response.json(); if (response.ok && data.status === 'ok') Toast.success('Backend connected', `Version ${data.version}`); else Toast.error('Backend unavailable.'); } catch { Toast.error('Backend unavailable', 'Check the configured URL.'); } });
+  $('clear-leads-btn')?.addEventListener('click', async () => {
+    if (!confirm('Delete every lead in this workspace? This cannot be undone.')) return;
+    try {
+      const leads = await getLeads();
+      const results = await Promise.all(leads.map(lead => leadApi('DELETE', `/${lead.id}`)));
+      const failed = results.find(result => !result.ok);
+      if (failed) return Toast.error('Could not clear all leads', failed.error);
+      Toast.success('All leads cleared.');
+    } catch (error) { Toast.error('Could not clear all leads', error.message); }
+  });
+  if ($('backend-url')) $('backend-url').value = apiBase(); const dark = $('dark-mode-toggle'); if (dark) { dark.checked = document.documentElement.dataset.theme === 'dark'; dark.addEventListener('change', event => Theme.apply(event.target.checked ? 'dark' : 'light')); }
+}
+
+document.addEventListener('DOMContentLoaded', () => { initShell(); initOAuthCallback(); initLogin(); if (!ensureAccess()) return; initDashboard(); SearchPage.init(); initReports(); CRM.init(); initSettings(); });

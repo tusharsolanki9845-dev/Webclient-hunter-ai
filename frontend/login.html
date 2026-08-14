@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In – WebClient Hunter AI</title>
+  <meta name="description" content="Sign in to WebClient Hunter AI to find and manage your leads.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;
+      background:linear-gradient(135deg,#EEF2FF 0%,#F5F3FF 50%,#E0F2FE 100%)}
+    [data-theme="dark"] body{background:linear-gradient(135deg,#0F0F1A 0%,#1A1A2E 100%)}
+    .auth-card{width:100%;max-width:420px;background:var(--white);border:1px solid var(--gray-200);
+      border-radius:var(--radius-xl);padding:40px;box-shadow:var(--shadow-lg)}
+    .auth-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem;
+      color:var(--gray-900);justify-content:center;margin-bottom:28px;text-decoration:none}
+    .auth-tabs{display:flex;background:var(--gray-100);border-radius:var(--radius-md);padding:4px;margin-bottom:24px}
+    .auth-tab{flex:1;padding:8px;text-align:center;border-radius:var(--radius-sm);font-size:.85rem;
+      font-weight:600;cursor:pointer;border:none;background:none;color:var(--gray-500);transition:all .2s}
+    .auth-tab.active{background:var(--white);color:var(--gray-900);box-shadow:var(--shadow-sm)}
+    .auth-panel{display:none;flex-direction:column;gap:14px}
+    .auth-panel.active{display:flex}
+    .auth-divider{text-align:center;font-size:.78rem;color:var(--gray-400);margin:4px 0}
+    .oauth-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .oauth-actions .btn{gap:8px;justify-content:center}
+    .oauth-mark{width:18px;height:18px;display:grid;place-items:center;border-radius:50%;font-size:.78rem;font-weight:800;background:var(--gray-100);color:var(--gray-700)}
+    .auth-footer{text-align:center;font-size:.78rem;color:var(--gray-400);margin-top:20px}
+    .auth-footer a{color:var(--blue-500);font-weight:600}
+    .demo-notice{background:var(--blue-50);border:1px solid var(--blue-100);border-radius:var(--radius-md);
+      padding:12px 14px;font-size:.78rem;color:var(--blue-600);text-align:center;margin-bottom:4px}
+  </style>
+</head>
+<body>
+  <div class="auth-card">
+    <a href="index.html" class="auth-logo">
+      <div class="nav-logo-icon">🎯</div>
+      WebClient Hunter AI
+    </a>
+
+    <div class="demo-notice">
+      <strong>Demo mode:</strong> Explore sample data without creating an account.
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-panel="login-form">Sign In</button>
+      <button class="auth-tab" data-panel="signup-form">Create Account</button>
+    </div>
+
+    <!-- LOGIN -->
+    <form class="auth-panel active" id="login-form" novalidate>
+      <div class="form-group">
+        <label for="login-email">Email Address</label>
+        <input type="email" class="form-input" id="login-email" placeholder="you@example.com" autocomplete="email" required>
+      </div>
+      <div class="form-group">
+        <label for="login-password">Password</label>
+        <input type="password" class="form-input" id="login-password" placeholder="••••••••" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Sign In →</button>
+      <div class="auth-divider">or continue with</div>
+      <div class="oauth-actions" aria-label="Social sign-in providers">
+        <button type="button" class="btn btn-secondary" data-oauth-provider="google"><span class="oauth-mark" aria-hidden="true">G</span>Google</button>
+        <button type="button" class="btn btn-secondary" data-oauth-provider="github"><span class="oauth-mark" aria-hidden="true">GH</span>GitHub</button>
+      </div>
+      <div class="auth-divider">or</div>
+      <a href="dashboard.html#demo=1" class="btn btn-secondary" style="width:100%;justify-content:center;text-align:center">Explore Demo (no login)</a>
+    </form>
+
+    <!-- SIGNUP -->
+    <form class="auth-panel" id="signup-form" novalidate>
+      <div class="form-group">
+        <label for="signup-name">Your Name</label>
+        <input type="text" class="form-input" id="signup-name" placeholder="Alex Johnson" autocomplete="name" required>
+      </div>
+      <div class="form-group">
+        <label for="signup-email">Email Address</label>
+        <input type="email" class="form-input" id="signup-email" placeholder="you@example.com" autocomplete="email" required>
+      </div>
+      <div class="form-group">
+        <label for="signup-password">Password <span style="color:var(--gray-400);font-weight:400">(min 12 chars)</span></label>
+        <input type="password" class="form-input" id="signup-password" placeholder="Choose a strong password" autocomplete="new-password" required minlength="12">
+      </div>
+      <button type="submit" class="btn btn-gradient" style="width:100%;justify-content:center">Create Free Account →</button>
+    </form>
+
+    <div class="auth-footer">
+      By signing in you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>
+    </div>
+  </div>
+
+  <div class="toast-container" aria-live="polite"></div>
+  <script src="runtime-config.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

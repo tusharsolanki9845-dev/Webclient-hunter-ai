@@ -1,32 +1,56 @@
-const { supabase } = require('../services/supabase.service');
+'use strict';
 
-// Demo data for when Supabase is not configured
+const { randomUUID } = require('crypto');
+
 const DEMO_LEADS = [
-  { id: '1', name: "Murphy's Plumbing & Heating", niche: 'Plumbing', location: 'Chicago, IL', url: 'murphysplumbing.com', seo_score: 32, speed_score: 28, mobile_score: 45, status: 'new', notes: 'No SSL, slow load time', created_at: new Date().toISOString() },
-  { id: '2', name: 'Bella Vista Italian Restaurant', niche: 'Restaurant', location: 'Austin, TX', url: 'bellavistaaustin.com', seo_score: 41, speed_score: 55, mobile_score: 38, status: 'contacted', notes: 'Menu not mobile-friendly', created_at: new Date().toISOString() },
-  { id: '3', name: 'Greenleaf Landscaping Co.', niche: 'Landscaping', location: 'Denver, CO', url: 'greenleaflandscaping.co', seo_score: 22, speed_score: 35, mobile_score: 30, status: 'interested', notes: 'No contact form', created_at: new Date().toISOString() },
-  { id: '4', name: 'Peak Performance Gym', niche: 'Fitness', location: 'Miami, FL', url: 'peakperformancegym.io', seo_score: 18, speed_score: 22, mobile_score: 25, status: 'new', notes: 'Terrible performance scores', created_at: new Date().toISOString() },
+  { id: 'a1202e9f-6a5c-4d1f-8a0e-000000000001', name: "Murphy's Plumbing & Heating", niche: 'Plumbing', location: 'Chicago, IL', url: 'https://murphysplumbing.example', seo_score: 32, speed_score: 28, mobile_score: 45, status: 'new', notes: 'No SSL, slow load time', created_at: '2026-01-10T12:00:00.000Z' },
+  { id: 'a1202e9f-6a5c-4d1f-8a0e-000000000002', name: 'Bella Vista Italian Restaurant', niche: 'Restaurant', location: 'Austin, TX', url: 'https://bellavista.example', seo_score: 41, speed_score: 55, mobile_score: 38, status: 'contacted', notes: 'Menu not mobile-friendly', created_at: '2026-01-11T12:00:00.000Z' },
+  { id: 'a1202e9f-6a5c-4d1f-8a0e-000000000003', name: 'Greenleaf Landscaping Co.', niche: 'Landscaping', location: 'Denver, CO', url: 'https://greenleaf.example', seo_score: 22, speed_score: 35, mobile_score: 30, status: 'interested', notes: 'No contact form', created_at: '2026-01-12T12:00:00.000Z' },
+  { id: 'a1202e9f-6a5c-4d1f-8a0e-000000000004', name: 'Peak Performance Gym', niche: 'Fitness', location: 'Miami, FL', url: 'https://peakperformance.example', seo_score: 18, speed_score: 22, mobile_score: 25, status: 'new', notes: 'Slow page and no booking flow', created_at: '2026-01-13T12:00:00.000Z' },
 ];
 
-/**
- * GET /api/leads/search?niche=&location=&keyword=&minScore=&limit=&offset=
- */
+let demoLeads = DEMO_LEADS.map(lead => ({ ...lead }));
+
+function demoResponse(res, body, status = 200) {
+  return res.status(status).json({ ...body, demo: true });
+}
+
+function isDemoRequest(req) {
+  return req.demoMode === true;
+}
+
+function requireDatabase(req) {
+  if (!req.supabase) {
+    const error = new Error('Database service is not configured.');
+    error.statusCode = 503;
+    throw error;
+  }
+}
+
+function escapeLike(value) {
+  return String(value).replace(/[\\%_]/g, '\\$&');
+}
+
+function demoFilter(leads, { niche, location, keyword, minScore = 0, maxScore = 100 }) {
+  const needle = String(keyword || '').toLowerCase();
+  return leads.filter(lead => {
+    const score = Number(lead.seo_score || 0);
+    return (!niche || lead.niche.toLowerCase() === String(niche).toLowerCase()) &&
+      (!location || lead.location.toLowerCase().includes(String(location).toLowerCase())) &&
+      (!needle || `${lead.name} ${lead.url}`.toLowerCase().includes(needle)) &&
+      score >= Number(minScore) && score <= Number(maxScore);
+  });
+}
+
 async function searchLeads(req, res) {
   const { niche, location, keyword, minScore = 0, maxScore = 100, limit = 20, offset = 0 } = req.query;
-
-  if (!supabase) {
-    // Filter demo data
-    let results = DEMO_LEADS.filter(l => {
-      if (niche && niche !== 'All Niches' && l.niche !== niche) return false;
-      if (location && location !== 'All Locations' && l.location !== location) return false;
-      if (keyword && !l.name.toLowerCase().includes(keyword.toLowerCase())) return false;
-      if (l.seo_score < minScore || l.seo_score > maxScore) return false;
-      return true;
-    });
-    return res.json({ data: results.slice(Number(offset), Number(offset) + Number(limit)), total: results.length, demo: true });
+  if (isDemoRequest(req)) {
+    const data = demoFilter(demoLeads, { niche, location, keyword, minScore, maxScore });
+    return demoResponse(res, { data: data.slice(Number(offset), Number(offset) + Number(limit)), total: data.length });
   }
 
-  let query = supabase
+  requireDatabase(req);
+  let query = req.supabase
     .from('leads')
     .select('*', { count: 'exact' })
     .eq('user_id', req.user.id)
@@ -36,100 +60,116 @@ async function searchLeads(req, res) {
     .range(Number(offset), Number(offset) + Number(limit) - 1);
 
   if (niche) query = query.eq('niche', niche);
-  if (location) query = query.ilike('location', `%${location}%`);
-  if (keyword) query = query.or(`name.ilike.%${keyword}%,url.ilike.%${keyword}%`);
+  if (location) query = query.ilike('location', `%${escapeLike(location)}%`);
+  if (keyword) query = query.ilike('name', `%${escapeLike(keyword)}%`);
 
   const { data, error, count } = await query;
   if (error) throw error;
-
-  res.json({ data, total: count });
+  return res.json({ data: data || [], total: count || 0 });
 }
 
-/**
- * GET /api/leads
- */
 async function getLeads(req, res) {
-  if (!supabase) {
-    return res.json({ data: DEMO_LEADS, total: DEMO_LEADS.length, demo: true });
-  }
+  if (isDemoRequest(req)) return demoResponse(res, { data: demoLeads, total: demoLeads.length });
 
-  const { data, error, count } = await supabase
+  requireDatabase(req);
+  const { data, error, count } = await req.supabase
     .from('leads')
     .select('*', { count: 'exact' })
     .eq('user_id', req.user.id)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  res.json({ data, total: count });
+  return res.json({ data: data || [], total: count || 0 });
 }
 
-/**
- * POST /api/leads
- */
-async function createLead(req, res) {
-  const { name, url, niche, location, status = 'new', notes, seo_score, speed_score, mobile_score } = req.body;
-
-  if (!supabase) {
-    const newLead = { id: Date.now().toString(), name, url, niche, location, status, notes, seo_score, speed_score, mobile_score, created_at: new Date().toISOString(), demo: true };
-    return res.status(201).json({ data: newLead });
+async function getLead(req, res) {
+  const { id } = req.params;
+  if (isDemoRequest(req)) {
+    const lead = demoLeads.find(item => item.id === id);
+    return lead ? demoResponse(res, { data: lead }) : res.status(404).json({ error: 'Lead not found.' });
   }
 
-  const { data, error } = await supabase
+  requireDatabase(req);
+  const { data, error } = await req.supabase
+    .from('leads')
+    .select('*')
+    .eq('id', id)
+    .eq('user_id', req.user.id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return res.status(404).json({ error: 'Lead not found.' });
+  return res.json({ data });
+}
+
+async function createLead(req, res) {
+  const { name, url, niche, location = '', status = 'new', notes = '', seo_score, speed_score, mobile_score } = req.body;
+  if (isDemoRequest(req)) {
+    const lead = {
+      id: randomUUID(), name, url, niche, location, status, notes, seo_score, speed_score, mobile_score,
+      created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    };
+    demoLeads.unshift(lead);
+    return demoResponse(res, { data: lead }, 201);
+  }
+
+  requireDatabase(req);
+  const { data, error } = await req.supabase
     .from('leads')
     .insert({ user_id: req.user.id, name, url, niche, location, status, notes, seo_score, speed_score, mobile_score })
     .select()
     .single();
-
   if (error) throw error;
-  res.status(201).json({ data });
+  return res.status(201).json({ data });
 }
 
-/**
- * PATCH /api/leads/:id
- */
 async function updateLead(req, res) {
   const { id } = req.params;
   const updates = {};
-  ['name', 'status', 'notes', 'niche', 'location'].forEach(f => {
-    if (req.body[f] !== undefined) updates[f] = req.body[f];
+  ['name', 'status', 'notes', 'niche', 'location'].forEach(field => {
+    if (req.body[field] !== undefined) updates[field] = req.body[field];
   });
   updates.updated_at = new Date().toISOString();
 
-  if (!supabase) {
-    return res.json({ data: { id, ...updates, demo: true } });
+  if (isDemoRequest(req)) {
+    const index = demoLeads.findIndex(item => item.id === id);
+    if (index === -1) return res.status(404).json({ error: 'Lead not found.' });
+    demoLeads[index] = { ...demoLeads[index], ...updates };
+    return demoResponse(res, { data: demoLeads[index] });
   }
 
-  const { data, error } = await supabase
+  requireDatabase(req);
+  const { data, error } = await req.supabase
     .from('leads')
     .update(updates)
     .eq('id', id)
     .eq('user_id', req.user.id)
     .select()
-    .single();
-
+    .maybeSingle();
   if (error) throw error;
-  if (!data) return res.status(404).json({ error: 'Lead not found' });
-  res.json({ data });
+  if (!data) return res.status(404).json({ error: 'Lead not found.' });
+  return res.json({ data });
 }
 
-/**
- * DELETE /api/leads/:id
- */
 async function deleteLead(req, res) {
   const { id } = req.params;
-
-  if (!supabase) {
-    return res.status(204).send();
+  if (isDemoRequest(req)) {
+    const previousLength = demoLeads.length;
+    demoLeads = demoLeads.filter(item => item.id !== id);
+    return previousLength === demoLeads.length
+      ? res.status(404).json({ error: 'Lead not found.' })
+      : res.status(204).send();
   }
 
-  const { error } = await supabase
+  requireDatabase(req);
+  const { data, error } = await req.supabase
     .from('leads')
     .delete()
     .eq('id', id)
-    .eq('user_id', req.user.id);
-
+    .eq('user_id', req.user.id)
+    .select('id');
   if (error) throw error;
-  res.status(204).send();
+  if (!data?.length) return res.status(404).json({ error: 'Lead not found.' });
+  return res.status(204).send();
 }
 
-module.exports = { searchLeads, getLeads, createLead, updateLead, deleteLead };
+module.exports = { searchLeads, getLeads, getLead, createLead, updateLead, deleteLead };

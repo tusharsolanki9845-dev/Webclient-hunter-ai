@@ -6,6 +6,8 @@
   <title>CRM Pipeline – WebClient Hunter AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -32,7 +34,9 @@
     <div class="sidebar-footer">
       <div class="sidebar-user">
         <div class="avatar">AJ</div>
-        <div><div class="sidebar-user-name">Alex Johnson</div><div class="sidebar-user-plan">Pro Plan</div></div>
+        <div><div class="sidebar-user-name">Alex Johnson</div><div class="sidebar-user-plan">Pro Plan</div>
+        </div>
+        <button id="logout-btn" class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;justify-content:center" title="Sign out">Sign Out</div>
       </div>
     </div>
   </aside>
@@ -157,6 +161,7 @@
 </div>
 
 <div class="toast-container" aria-live="polite"></div>
+<script src="runtime-config.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

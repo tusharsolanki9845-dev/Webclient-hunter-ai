@@ -1,3 +1,5 @@
+'use strict';
+
 require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet');
@@ -12,101 +14,70 @@ const outreachRoutes = require('./routes/outreach.routes');
 const { errorHandler } = require('./middleware/error.middleware');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = Number(process.env.PORT || 3001);
+const isProduction = process.env.NODE_ENV === 'production';
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean)
+  .filter(origin => origin !== '*');
 
-// ===== SECURITY MIDDLEWARE =====
-app.use(helmet());
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true }));
+app.disable('x-powered-by');
+app.set('trust proxy', process.env.TRUST_PROXY === 'true' ? 1 : false);
 
-// ===== CORS =====
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://127.0.0.1:5500')
-  .split(',').map(o => o.trim());
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+app.use(express.json({ limit: '32kb' }));
+app.use(express.urlencoded({ extended: false, limit: '32kb' }));
 
 app.use(cors({
-  origin: (origin, cb) => {
-    // Allow requests with no origin (curl, Postman, same-origin)
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-    cb(new Error(`CORS: origin ${origin} not allowed`));
+  origin(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (!isProduction) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(null, false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400,
 }));
 
-// ===== RATE LIMITING =====
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+const createLimiter = (max, message) => rateLimit({
+  windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000),
+  max,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { error: 'Too many requests. Please try again later.' },
-});
-app.use('/api/', limiter);
-
-// ===== LOGGING =====
-if (process.env.NODE_ENV !== 'test') {
-  app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-}
-
-// ===== HEALTH CHECK =====
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development',
-  });
+  message: { error: message },
 });
 
-// ===== ROUTES =====
+app.use('/api', createLimiter(Number(process.env.RATE_LIMIT_MAX_REQUESTS || 100), 'Too many requests. Please try again later.'));
+app.use('/api/auth', createLimiter(Number(process.env.AUTH_RATE_LIMIT_MAX || 20), 'Too many authentication attempts. Please try again later.'));
+app.use('/api/audit', createLimiter(Number(process.env.AUDIT_RATE_LIMIT_MAX || 20), 'Too many audit requests. Please try again later.'));
+app.use('/api/outreach', createLimiter(Number(process.env.OUTREACH_RATE_LIMIT_MAX || 10), 'Too many AI generation requests. Please try again later.'));
+
+if (process.env.NODE_ENV !== 'test') app.use(morgan(isProduction ? 'combined' : 'dev'));
+
+app.get('/health', (_req, res) => res.json({
+  status: 'ok',
+  version: '2.1.0',
+  environment: process.env.NODE_ENV || 'development',
+  timestamp: new Date().toISOString(),
+}));
+
 app.use('/api/auth', authRoutes);
 app.use('/api/leads', leadsRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/outreach', outreachRoutes);
 
-const searchRoutes = require("./routes/search.routes");
-app.use("/api/search", searchRoutes);
-
-// ===== 404 =====
-app.use((req, res) => {
-  res.status(404).json({ error: `Route ${req.method} ${req.path} not found` });
-});
-
-// ===== ERROR HANDLER =====
+app.use((req, res) => res.status(404).json({ error: `${req.method} ${req.path} not found.` }));
 app.use(errorHandler);
-app.get("/", (req, res) => {
-  res.json({
-    message: "WebClient Hunter AI Backend is running",
-    status: "ok"
-  });
-});
 
-app.get("/health", (req, res) => {
-  res.json({
-    status: "ok",
-    service: "WebClient Hunter AI Backend"
+function startServer(port = PORT) {
+  return app.listen(port, () => {
+    console.log(`WebClient Hunter AI API listening on port ${port}`);
   });
-});
-app.get("/", (req, res) => {
-  res.json({
-    status: "ok",
-    message: "WebClient Hunter AI Backend is running"
-  });
-});
+}
 
-app.get("/health", (req, res) => {
-  res.json({
-    status: "ok"
-  });
-});
-message: "WebClient Hunter AI Backend is running v2"
-// ===== START =====
-app.listen(PORT, () => {
-  console.log(`\n🚀 WebClient Hunter AI Backend`);
-  console.log(`   Server running on http://localhost:${PORT}`);
-  console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`   Health check: http://localhost:${PORT}/health\n`);
-});
+if (require.main === module) startServer();
 
-module.exports = app;
+module.exports = { app, startServer };

@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: webclient-hunter-ai-api
+    runtime: node
+    region: oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: 'true'
+      - key: DEMO_MODE_ENABLED
+        value: 'false'
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_OUTREACH_MODEL
+        value: gpt-4o-mini
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: RATE_LIMIT_WINDOW_MS
+        value: '900000'
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: '100'
+      - key: AUTH_RATE_LIMIT_MAX
+        value: '20'
+      - key: AUDIT_RATE_LIMIT_MAX
+        value: '20'
+      - key: OUTREACH_RATE_LIMIT_MAX
+        value: '10'

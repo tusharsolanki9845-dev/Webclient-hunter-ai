@@ -1,38 +1,44 @@
-const { auditWebsite } = require('../services/websiteAudit.service');
-const { supabase } = require('../services/supabase.service');
+'use strict';
 
-/**
- * POST /api/audit
- * Body: { url: string, leadId?: string }
- */
+const { auditWebsite } = require('../services/websiteAudit.service');
+
+async function verifyLeadOwnership(client, leadId, userId) {
+  if (!leadId) return null;
+  const { data, error } = await client
+    .from('leads')
+    .select('id')
+    .eq('id', leadId)
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) {
+    const notFound = new Error('Lead not found.');
+    notFound.statusCode = 404;
+    throw notFound;
+  }
+  return data.id;
+}
+
 async function runAudit(req, res) {
   const { url, leadId } = req.body;
-
-  // Run the audit
+  const ownedLeadId = await verifyLeadOwnership(req.supabase, leadId, req.user.id);
   const report = await auditWebsite(url);
 
-  // Save to Supabase if configured and user is authenticated
-  if (supabase && req.user) {
-    try {
-      await supabase.from('audits').insert({
-        user_id: req.user.id,
-        lead_id: leadId || null,
-        url: report.url,
-        seo_score: report.scores.seo,
-        speed_score: report.scores.speed,
-        mobile_score: report.scores.mobile,
-        security_score: report.scores.security,
-        overall_score: report.scores.overall,
-        issues: report.issues,
-        load_time_ms: report.loadTime,
-      });
-    } catch (dbErr) {
-      // Log but don't fail the request — return audit result regardless
-      console.error('Failed to save audit to DB:', dbErr.message);
-    }
-  }
+  const { error } = await req.supabase.from('audits').insert({
+    user_id: req.user.id,
+    lead_id: ownedLeadId,
+    url: report.url,
+    seo_score: report.scores.seo,
+    speed_score: report.scores.speed,
+    mobile_score: report.scores.mobile,
+    security_score: report.scores.security,
+    overall_score: report.scores.overall,
+    issues: report.issues,
+    load_time_ms: report.responseTimeMs || null,
+  });
+  if (error) throw error;
 
-  res.json({ data: report });
+  return res.json({ data: report });
 }
 
 module.exports = { runAudit };

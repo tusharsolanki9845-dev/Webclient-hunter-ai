@@ -10,6 +10,8 @@
   <meta property="og:type" content="website">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -47,8 +49,8 @@
   <a href="#how-it-works" onclick="document.getElementById('mobile-nav').classList.remove('open')">How It Works</a>
   <a href="#pricing" onclick="document.getElementById('mobile-nav').classList.remove('open')">Pricing</a>
   <div class="mobile-nav-divider"></div>
-  <a href="dashboard.html">Dashboard Demo</a>
-  <a href="search.html">Search Leads</a>
+  <a href="dashboard.html#demo=1">Dashboard Demo</a>
+  <a href="search.html#demo=1">Search Leads</a>
   <div class="mobile-nav-divider"></div>
   <a href="dashboard.html" class="btn btn-gradient" style="text-align:center;margin-top:8px">Start Free →</a>
 </nav>
@@ -69,7 +71,7 @@
       <p class="hero-desc fade-in delay-2">Stop cold outreach with no data. Hunt businesses with broken websites, audit them in seconds, and send personalized pitches that actually convert.</p>
       <div class="hero-cta fade-in delay-3">
         <a href="dashboard.html" class="btn btn-gradient btn-lg">Start Hunting Free →</a>
-        <a href="search.html" class="btn btn-secondary btn-lg">See Live Demo</a>
+        <a href="search.html#demo=1" class="btn btn-secondary btn-lg">See Live Demo</a>
       </div>
       <div class="hero-stats fade-in delay-3">
         <div class="hero-stat"><div class="hero-stat-num">12,400+</div><div class="hero-stat-label">Businesses Analyzed</div></div>
@@ -253,6 +255,7 @@
 </footer>
 
 <div class="toast-container" aria-live="polite"></div>
+<script src="runtime-config.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

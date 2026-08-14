@@ -1,35 +1,37 @@
-const { verifyToken } = require('../services/supabase.service');
+'use strict';
 
-/**
- * Middleware: require a valid Supabase JWT.
- * Attaches req.user if valid; returns 401 otherwise.
- */
+const { createUserClient, verifyToken, isConfigured } = require('../services/supabase.service');
+
+function getBearerToken(req) {
+  const header = req.headers.authorization || '';
+  if (!header.startsWith('Bearer ')) return null;
+  const token = header.slice('Bearer '.length).trim();
+  return token || null;
+}
+
 async function requireAuth(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Authorization header missing or malformed.' });
+  if (!isConfigured) {
+    return res.status(503).json({ error: 'Authentication is unavailable because Supabase Auth is not configured.' });
   }
 
-  const token = authHeader.split(' ')[1];
+  const token = getBearerToken(req);
+  if (!token) return res.status(401).json({ error: 'A bearer token is required.' });
+
   try {
     req.user = await verifyToken(token);
-    next();
-  } catch (err) {
+    req.supabase = createUserClient(token);
+    return next();
+  } catch {
     return res.status(401).json({ error: 'Invalid or expired token. Please sign in again.' });
   }
 }
 
-/**
- * Optional auth — attaches user if token is present, but doesn't block the request.
- */
-async function optionalAuth(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    try {
-      req.user = await verifyToken(authHeader.split(' ')[1]);
-    } catch { /* ignore */ }
+function demoOnly(req, res, next) {
+  if (process.env.DEMO_MODE_ENABLED !== 'true') {
+    return res.status(404).json({ error: 'Demo mode is not enabled.' });
   }
-  next();
+  req.demoMode = true;
+  return next();
 }
 
-module.exports = { requireAuth, optionalAuth };
+module.exports = { requireAuth, demoOnly, getBearerToken };
