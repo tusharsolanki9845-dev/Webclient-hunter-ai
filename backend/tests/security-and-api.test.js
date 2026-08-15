@@ -84,6 +84,9 @@ test('health stays public while protected routes fail closed and OAuth rejects i
   await withServer(async base => {
     const health = await fetch(`${base}/health`);
     assert.equal(health.status, 200);
+    const healthPayload = await health.json();
+    assert.equal(healthPayload.status, 'ok');
+    assert.equal(Object.prototype.hasOwnProperty.call(healthPayload, 'environment'), false);
     const leads = await fetch(`${base}/api/leads`);
     assert.equal(leads.status, protectedStatus);
     const audit = await fetch(`${base}/api/audit`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: 'https://example.com' }) });
