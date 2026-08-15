@@ -62,7 +62,6 @@ if (process.env.NODE_ENV !== 'test') app.use(morgan(isProduction ? 'combined' : 
 app.get('/health', (_req, res) => res.json({
   status: 'ok',
   version: '2.1.0',
-  environment: process.env.NODE_ENV || 'development',
   timestamp: new Date().toISOString(),
 }));
 
