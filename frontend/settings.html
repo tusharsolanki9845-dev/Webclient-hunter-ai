@@ -26,15 +26,15 @@
       <a href="settings.html" class="active"><span class="nav-icon">⚙️</span> Settings</a>
     </nav>
     <div class="sidebar-upgrade">
-      <div class="sidebar-upgrade-label">Pro Plan</div>
-      <div class="sidebar-upgrade-sub">87 / 200 audits used</div>
-      <div class="sidebar-upgrade-bar"><div class="sidebar-upgrade-bar-fill" style="width:43%"></div></div>
-      <a href="settings.html" class="btn btn-primary btn-sm" style="width:100%;justify-content:center">Upgrade</a>
+      <div class="sidebar-upgrade-label">Free early access</div>
+      <div class="sidebar-upgrade-sub">Usage protection enabled</div>
+      <div class="sidebar-upgrade-bar"><div class="sidebar-upgrade-bar-fill" style="width:18%"></div></div>
+      <a href="#panel-billing" class="btn btn-primary btn-sm" style="width:100%;justify-content:center">Plan details</a>
     </div>
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="avatar">AJ</div>
-        <div><div class="sidebar-user-name">Alex Johnson</div><div class="sidebar-user-plan">Pro Plan</div>
+        <div class="avatar">AC</div>
+        <div><div class="sidebar-user-name">Account</div><div class="sidebar-user-plan">Free early access</div>
         </div>
         <button id="logout-btn" class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;justify-content:center" title="Sign out">Sign Out</div>
       </div>
@@ -75,28 +75,27 @@
             <div class="settings-section">
               <div class="settings-section-title">Profile Settings</div>
               <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
-                <div class="avatar" style="width:64px;height:64px;font-size:1.4rem">AJ</div>
+                <div class="avatar" style="width:64px;height:64px;font-size:1.4rem">AC</div>
                 <div>
-                  <div style="font-weight:700;color:var(--gray-900);margin-bottom:2px">Alex Johnson</div>
-                  <div style="font-size:.78rem;color:var(--gray-400)">Pro Plan · Member since Jan 2024</div>
-                  <button class="btn btn-secondary btn-sm" style="margin-top:8px">Change Avatar</button>
+                  <div style="font-weight:700;color:var(--gray-900);margin-bottom:2px">Your workspace</div>
+                  <div style="font-size:.78rem;color:var(--gray-400)">Free early access · usage limits protect the service</div>
                 </div>
               </div>
               <div style="display:flex;flex-direction:column;gap:14px">
                 <div class="form-row">
                   <div class="form-group">
                     <label for="s-name">Full Name</label>
-                    <input type="text" class="form-input" id="s-name" value="Alex Johnson">
+                    <input type="text" class="form-input" id="s-name" placeholder="Your name">
                   </div>
                   <div class="form-group">
                     <label for="s-email">Email</label>
-                    <input type="email" class="form-input" id="s-email" value="alex@example.com">
+                    <input type="email" class="form-input" id="s-email" placeholder="Your account email" readonly>
                   </div>
                 </div>
                 <div class="form-row">
                   <div class="form-group">
                     <label for="s-company">Company / Agency</label>
-                    <input type="text" class="form-input" id="s-company" value="My Agency">
+                    <input type="text" class="form-input" id="s-company" placeholder="Agency or company name">
                   </div>
                   <div class="form-group">
                     <label for="s-website">Your Website</label>
@@ -189,26 +188,26 @@
               <div class="settings-section-title">Billing &amp; Plan</div>
               <div style="background:var(--gradient-subtle);border:1px solid var(--blue-100);border-radius:var(--radius-md);padding:18px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
                 <div>
-                  <div style="font-weight:700;color:var(--gray-900);font-size:1rem">Pro Plan</div>
-                  <div style="font-size:.8rem;color:var(--gray-500);margin-top:3px">$79/month · Renews Feb 15, 2025</div>
+                  <div style="font-weight:700;color:var(--gray-900);font-size:1rem">Free early-access workspace</div>
+                  <div style="font-size:.8rem;color:var(--gray-500);margin-top:3px">No payment method is stored and no charge is made here.</div>
                 </div>
                 <span class="badge badge-green">Active</span>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
                 <div class="glass-card" style="padding:14px;border-radius:var(--radius-md)">
                   <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--gray-400);margin-bottom:4px">Audits Used</div>
-                  <div style="font-size:1.4rem;font-weight:800;color:var(--gray-900)">87 <span style="font-size:.82rem;font-weight:400;color:var(--gray-400)">/ 200</span></div>
-                  <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" data-score="43" style="width:0%"></div></div>
+                  <div style="font-size:1.4rem;font-weight:800;color:var(--gray-900)">Protected <span style="font-size:.82rem;font-weight:400;color:var(--gray-400)">by API limits</span></div>
+                  <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" data-score="18" style="width:0%"></div></div>
                 </div>
                 <div class="glass-card" style="padding:14px;border-radius:var(--radius-md)">
                   <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.07em;color:var(--gray-400);margin-bottom:4px">Leads Saved</div>
-                  <div style="font-size:1.4rem;font-weight:800;color:var(--gray-900)">142 <span style="font-size:.82rem;font-weight:400;color:var(--gray-400)">unlimited</span></div>
-                  <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" data-score="100" style="width:0%"></div></div>
+                  <div style="font-size:1.4rem;font-weight:800;color:var(--gray-900)">Workspace data <span style="font-size:.82rem;font-weight:400;color:var(--gray-400)">managed in CRM</span></div>
+                  <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" data-score="36" style="width:0%"></div></div>
                 </div>
               </div>
               <div style="display:flex;gap:10px">
-                <button class="btn btn-primary" onclick="Toast.info('Redirecting to billing portal…')">Manage Billing</button>
-                <button class="btn btn-secondary" onclick="Toast.info('Contact sales@wchai.com for Agency plan')">Upgrade Plan</button>
+                <button class="btn btn-primary" onclick="Toast.info('Billing is not connected in the free early-access release.')">Billing status</button>
+                <button class="btn btn-secondary" onclick="Toast.info('Paid plans will be announced after early-access validation.')">Paid plans</button>
               </div>
             </div>
           </section>
