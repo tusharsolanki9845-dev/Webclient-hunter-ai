@@ -12,6 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <meta name="theme-color" content="#4F46E5">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -32,6 +34,7 @@
       </ul>
       <div class="nav-actions">
         <button class="dark-toggle" aria-label="Toggle dark mode">🌙</button>
+        <button id="installApp" class="btn btn-secondary btn-sm" type="button" hidden>Install app</button>
         <a href="dashboard.html" class="btn btn-secondary btn-sm">Sign In</a>
         <a href="dashboard.html" class="btn btn-gradient btn-sm">Start Free →</a>
         <button class="nav-hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false">
@@ -257,5 +260,6 @@
 <div class="toast-container" aria-live="polite"></div>
 <script src="runtime-config.js"></script>
 <script src="js/main.js"></script>
+<script src="js/pwa.js"></script>
 </body>
 </html>
