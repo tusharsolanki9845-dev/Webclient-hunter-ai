@@ -89,8 +89,9 @@ test('PageSpeed output stays source-labelled and separates Lighthouse evidence f
 });
 
 test('evidence-first report screen has no fabricated default audit, quota, or business-impact claim', async () => {
-  const [reportMarkup, runtime] = await Promise.all([
+  const [reportMarkup, dashboardMarkup, runtime] = await Promise.all([
     fs.readFile(path.resolve(__dirname, '../../frontend/reports.html'), 'utf8'),
+    fs.readFile(path.resolve(__dirname, '../../frontend/dashboard.html'), 'utf8'),
     fs.readFile(path.resolve(__dirname, '../../frontend/js/main.js'), 'utf8'),
   ]);
   assert.match(reportMarkup, /id="run-pagespeed-btn"/);
@@ -98,6 +99,9 @@ test('evidence-first report screen has no fabricated default audit, quota, or bu
   assert.match(runtime, /API\.post\('\/audit\/pagespeed'/);
   assert.match(runtime, /Heuristic website checks/);
   assert.doesNotMatch(reportMarkup, /Example Restaurant|87 \/ 200 audits used|AI Audit Report|losing ~53%|8\.4s load time/);
+  assert.match(dashboardMarkup, /id="demo-disclosure"/);
+  assert.match(dashboardMarkup, /Demo workspace:/);
+  assert.doesNotMatch(dashboardMarkup, /87 \/ 200 audits used|Alex Johnson|↑ 12 this week|↑ 18% this month/);
 });
 
 test('public contact enrichment keeps generic business inboxes and excludes person-named emails', () => {

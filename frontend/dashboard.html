@@ -27,21 +27,15 @@
       <div class="sidebar-section-label">Account</div>
       <a href="settings.html"><span class="nav-icon">⚙️</span> Settings</a>
     </nav>
-    <div class="sidebar-upgrade">
-      <div class="sidebar-upgrade-label">Pro Plan</div>
-      <div class="sidebar-upgrade-sub">87 / 200 audits used</div>
-      <div class="sidebar-upgrade-bar"><div class="sidebar-upgrade-bar-fill" style="width:43%"></div></div>
-      <a href="settings.html" class="btn btn-primary btn-sm" style="width:100%;justify-content:center">Upgrade</a>
-    </div>
+    <div class="sidebar-upgrade"><div class="sidebar-upgrade-label">Research workspace</div><div class="sidebar-upgrade-sub">No plan or usage quota is shown in demo mode.</div></div>
     <div class="sidebar-footer">
       <div class="sidebar-user">
-        <div class="avatar">AJ</div>
+        <div class="avatar">WC</div>
         <div>
-          <div class="sidebar-user-name">Alex Johnson</div>
-          <div class="sidebar-user-plan">Pro Plan</div>
+          <div class="sidebar-user-name">Account</div>
+          <div class="sidebar-user-plan">Your workspace</div>
         </div>
-        <button id="logout-btn" class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;justify-content:center" title="Sign out">Sign Out
-        </div>
+        <button id="logout-btn" class="btn btn-secondary btn-sm" style="width:100%;margin-top:8px;justify-content:center" title="Sign out" type="button">Sign Out</button>
       </div>
     </div>
   </aside>
@@ -65,40 +59,41 @@
       <!-- Welcome -->
       <div class="page-header-row">
         <div class="page-header">
-          <h1>Good morning, Alex 👋</h1>
-          <p>Here's your lead pipeline overview for today.</p>
+          <h1 id="dashboard-greeting">Your research workspace</h1>
+          <p id="dashboard-summary">Review only the business records and website evidence you have chosen to save.</p>
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <a href="search.html" class="btn btn-secondary btn-sm">🔍 Search Leads</a>
           <a href="reports.html" class="btn btn-primary btn-sm">📊 Run Audit</a>
         </div>
       </div>
+      <div class="glass-card" id="demo-disclosure" hidden style="padding:14px 18px;margin-bottom:18px;border-left:4px solid var(--yellow-500)"><strong>Demo workspace:</strong> every account label, lead, score, date, and pipeline status below is sample content for interface exploration only. It is not customer, business, or performance data.</div>
 
       <!-- STATS -->
       <div class="stats-grid">
         <div class="glass-card stat-card fade-in">
           <div class="stat-card-icon blue">🎯</div>
           <div class="stat-value" id="stat-leads">—</div>
-          <div class="stat-label">Total Leads</div>
-          <div class="stat-change up">↑ 12 this week</div>
+          <div class="stat-label" id="stat-leads-label">Saved leads</div>
+          <div class="stat-change" id="stat-leads-change">No comparison period</div>
         </div>
         <div class="glass-card stat-card fade-in delay-1">
           <div class="stat-card-icon yellow">📧</div>
           <div class="stat-value" id="stat-contacted">—</div>
-          <div class="stat-label">Contacted</div>
-          <div class="stat-change up">↑ 3 this week</div>
+          <div class="stat-label" id="stat-contacted-label">Marked contacted</div>
+          <div class="stat-change" id="stat-contacted-change">No comparison period</div>
         </div>
         <div class="glass-card stat-card fade-in delay-2">
           <div class="stat-card-icon purple">📋</div>
           <div class="stat-value" id="stat-audits">—</div>
-          <div class="stat-label">Audits Run</div>
-          <div class="stat-change up">↑ 8 this week</div>
+          <div class="stat-label" id="stat-audits-label">Audit records</div>
+          <div class="stat-change" id="stat-audits-change">No comparison period</div>
         </div>
         <div class="glass-card stat-card fade-in delay-3">
           <div class="stat-card-icon green">💰</div>
           <div class="stat-value" id="stat-revenue">—</div>
-          <div class="stat-label">Pipeline Value</div>
-          <div class="stat-change up">↑ 18% this month</div>
+          <div class="stat-label" id="stat-revenue-label">Won records</div>
+          <div class="stat-change" id="stat-revenue-change">No revenue estimate</div>
         </div>
       </div>
 
@@ -107,11 +102,11 @@
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:28px">
         <a href="search.html" class="quick-action-card">
           <div class="quick-action-icon blue">🔍</div>
-          <div><div class="quick-action-title">Search Leads</div><div class="quick-action-sub">Find businesses by niche</div></div>
+          <div><div class="quick-action-title">Search mapped businesses</div><div class="quick-action-sub">User-triggered OpenStreetMap discovery</div></div>
         </a>
         <a href="reports.html" class="quick-action-card">
           <div class="quick-action-icon purple">📊</div>
-          <div><div class="quick-action-title">Run Website Audit</div><div class="quick-action-sub">Analyze any website instantly</div></div>
+          <div><div class="quick-action-title">Run website checks</div><div class="quick-action-sub">Source-labelled, on-demand diagnostics</div></div>
         </a>
         <a href="crm.html" class="quick-action-card">
           <div class="quick-action-icon green">📋</div>
@@ -119,14 +114,14 @@
         </a>
         <a href="settings.html" class="quick-action-card">
           <div class="quick-action-icon yellow">⚙️</div>
-          <div><div class="quick-action-title">Settings</div><div class="quick-action-sub">API keys &amp; profile</div></div>
+          <div><div class="quick-action-title">Settings</div><div class="quick-action-sub">Profile and workspace preferences</div></div>
         </a>
       </div>
 
       <!-- Recent Leads -->
       <div class="table-container">
         <div class="table-header">
-          <span class="table-title">Recent Leads</span>
+          <span class="table-title" id="recent-leads-title">Recent saved leads</span>
           <a href="crm.html" class="btn btn-secondary btn-sm">View All →</a>
         </div>
         <div style="overflow-x:auto">

@@ -240,8 +240,17 @@ function initLogin() {
 
 async function initDashboard() {
   if (!$('stat-leads')) return;
+  const isDemo = Auth.demo();
+  if (isDemo) {
+    $('demo-disclosure')?.removeAttribute('hidden');
+    text($('dashboard-greeting'), 'Explore the sample workspace');
+    text($('dashboard-summary'), 'This page contains fictional interface data only. Sign in to create a private workspace with your own records.');
+    text($('stat-leads-label'), 'Sample leads'); text($('stat-contacted-label'), 'Sample statuses'); text($('stat-audits-label'), 'Sample audit records'); text($('stat-revenue-label'), 'Sample only');
+    ['stat-leads-change', 'stat-contacted-change', 'stat-audits-change'].forEach(id => text($(id), 'Not production activity'));
+    text($('stat-revenue-change'), 'No revenue estimate'); text($('recent-leads-title'), 'Sample leads — demo only');
+  }
   try {
-    const leads = await getLeads(); text($('stat-leads'), leads.length); text($('stat-contacted'), leads.filter(lead => ['contacted', 'interested'].includes(lead.status)).length); text($('stat-audits'), leads.length); text($('stat-revenue'), `$${(leads.filter(lead => lead.status === 'won').length * 2800).toLocaleString()}`);
+    const leads = await getLeads(); text($('stat-leads'), leads.length); text($('stat-contacted'), leads.filter(lead => ['contacted', 'interested'].includes(lead.status)).length); text($('stat-audits'), leads.length); text($('stat-revenue'), isDemo ? '—' : String(leads.filter(lead => lead.status === 'won').length));
     const table = $('recent-leads-list'); if (!table) return; table.replaceChildren();
     if (!leads.length) { const row = document.createElement('tr'), cell = document.createElement('td'); cell.colSpan = 5; cell.appendChild(empty('No leads yet', 'Run an audit to begin building your pipeline.')); row.appendChild(cell); return table.appendChild(row); }
     leads.slice(0, 6).forEach(lead => { const row = document.createElement('tr'); const business = document.createElement('td'); business.append(tag('strong', '', lead.name), tag('div', '', lead.url)); business.lastChild.style.cssText = 'font-size:.72rem;color:var(--gray-400)'; row.appendChild(business); [lead.niche || '—', lead.location || '—'].forEach(value => row.appendChild(tag('td', '', value))); const status = tag('td'); status.appendChild(tag('span', `badge ${statusClass[lead.status] || 'badge-gray'}`, lead.status)); row.appendChild(status); row.appendChild(tag('td', '', date(lead.created_at))); table.appendChild(row); });
