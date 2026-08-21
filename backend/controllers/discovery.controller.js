@@ -13,8 +13,10 @@ const MAX_RESULTS = 25;
 const MAX_HALF_LATITUDE = 0.09;
 const MAX_HALF_LONGITUDE = 0.11;
 const MAX_PUBLIC_EMAILS = 3;
+const NOMINATIM_MIN_INTERVAL_MS = 1100;
 const GENERIC_EMAIL_PREFIXES = new Set(['admin', 'booking', 'bookings', 'business', 'careers', 'contact', 'enquiries', 'enquiry', 'hello', 'info', 'marketing', 'office', 'reservations', 'sales', 'service', 'support', 'team']);
 const cache = new Map();
+let nextNominatimRequestAt = 0;
 
 const DEMO_DISCOVERY = Object.freeze([
   { id: 'osm-demo-restaurant-1', name: 'Willow & Stone Kitchen', url: 'https://willowandstone.example', niche: 'Restaurant', location: 'Selected area', source: 'OpenStreetMap demo data' },
@@ -54,6 +56,14 @@ function cacheSet(key, value) {
   cache.set(key, { value, expiresAt: Date.now() + CACHE_TTL_MS });
   if (cache.size > 100) cache.delete(cache.keys().next().value);
   return value;
+}
+
+async function waitForNominatimSlot() {
+  const now = Date.now();
+  const scheduledAt = Math.max(now, nextNominatimRequestAt);
+  nextNominatimRequestAt = scheduledAt + NOMINATIM_MIN_INTERVAL_MS;
+  const waitMs = scheduledAt - now;
+  if (waitMs > 0) await new Promise(resolve => setTimeout(resolve, waitMs));
 }
 
 function boundedBox(result) {
@@ -159,6 +169,7 @@ async function geocodeLocation(location) {
   url.searchParams.set('format', 'jsonv2');
   url.searchParams.set('limit', '1');
   url.searchParams.set('addressdetails', '0');
+  await waitForNominatimSlot();
   const response = await fetchWithTimeout(url, { headers: { 'User-Agent': appUserAgent(), 'Accept-Language': 'en' } });
   const matches = await response.json();
   if (!Array.isArray(matches) || !matches[0]) throw upstreamError('No matching city or area was found. Try a more specific location.', 404);
@@ -208,4 +219,4 @@ async function searchBusinesses(req, res) {
   return res.json({ data: { source: 'openstreetmap', attribution: ATTRIBUTION, attributionUrl: ATTRIBUTION_URL, ...data } });
 }
 
-module.exports = { DISCOVERY_CATEGORIES, boundedBox, overpassQuery, normalizeElement, extractPublicBusinessEmails, enrichWebsite, enrichBusiness, searchBusinesses };
+module.exports = { DISCOVERY_CATEGORIES, NOMINATIM_MIN_INTERVAL_MS, boundedBox, overpassQuery, normalizeElement, extractPublicBusinessEmails, enrichWebsite, enrichBusiness, searchBusinesses };

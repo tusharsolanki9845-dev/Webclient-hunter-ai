@@ -1,6 +1,7 @@
 'use strict';
 
 const { auditWebsite } = require('../services/websiteAudit.service');
+const { fetchPageSpeedReport } = require('../services/pagespeed.service');
 
 async function verifyLeadOwnership(client, leadId, userId) {
   if (!leadId) return null;
@@ -41,4 +42,11 @@ async function runAudit(req, res) {
   return res.json({ data: report });
 }
 
-module.exports = { runAudit };
+async function runPageSpeed(req, res) {
+  const { url, leadId } = req.body;
+  await verifyLeadOwnership(req.supabase, leadId, req.user.id);
+  const report = await fetchPageSpeedReport(url);
+  return res.json({ data: report });
+}
+
+module.exports = { runAudit, runPageSpeed };

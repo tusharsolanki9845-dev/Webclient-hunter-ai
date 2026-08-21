@@ -1,12 +1,15 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs/promises');
 const http = require('node:http');
+const path = require('node:path');
 const test = require('node:test');
 
 const { normalizeHttpUrl, isPublicIp } = require('../utils/urlSafety');
 const { fetchPage, analyzeWebsite } = require('../services/websiteAudit.service');
-const { DISCOVERY_CATEGORIES, boundedBox, overpassQuery, normalizeElement, extractPublicBusinessEmails } = require('../controllers/discovery.controller');
+const { normalisePageSpeedPayload } = require('../services/pagespeed.service');
+const { DISCOVERY_CATEGORIES, NOMINATIM_MIN_INTERVAL_MS, boundedBox, overpassQuery, normalizeElement, extractPublicBusinessEmails } = require('../controllers/discovery.controller');
 const { app } = require('../server');
 
 async function withServer(run) {
@@ -69,6 +72,32 @@ test('free discovery uses bounded category queries and returns only safe public 
   const box = boundedBox({ lat: '28.5', lon: '77.4', boundingbox: ['27.0', '30.0', '76.0', '79.0'] });
   assert.ok(box.north - box.south <= 0.18);
   assert.ok(box.east - box.west <= 0.22);
+  assert.ok(NOMINATIM_MIN_INTERVAL_MS >= 1000);
+});
+
+test('PageSpeed output stays source-labelled and separates Lighthouse evidence from a business verdict', () => {
+  const report = normalisePageSpeedPayload({ lighthouseResult: {
+    finalUrl: 'https://example.com/',
+    configSettings: { formFactor: 'mobile' },
+    categories: { performance: { score: 0.91 }, accessibility: { score: 0.78 }, seo: { score: 0.63 } },
+    audits: { 'first-contentful-paint': { displayValue: '1.2 s' }, 'largest-contentful-paint': { displayValue: '2.5 s' }, 'total-blocking-time': { displayValue: '120 ms' }, 'cumulative-layout-shift': { displayValue: '0.04' } },
+  } }, 'https://example.com/');
+  assert.deepEqual(report.categories, { performance: 91, accessibility: 78, seo: 63 });
+  assert.equal(report.source, 'Google PageSpeed Insights');
+  assert.match(report.limitation, /point-in-time Lighthouse lab report/);
+  assert.match(report.sourceUrl, /pagespeed\.web\.dev/);
+});
+
+test('evidence-first report screen has no fabricated default audit, quota, or business-impact claim', async () => {
+  const [reportMarkup, runtime] = await Promise.all([
+    fs.readFile(path.resolve(__dirname, '../../frontend/reports.html'), 'utf8'),
+    fs.readFile(path.resolve(__dirname, '../../frontend/js/main.js'), 'utf8'),
+  ]);
+  assert.match(reportMarkup, /id="run-pagespeed-btn"/);
+  assert.match(reportMarkup, /id="pagespeed-panel"/);
+  assert.match(runtime, /API\.post\('\/audit\/pagespeed'/);
+  assert.match(runtime, /Heuristic website checks/);
+  assert.doesNotMatch(reportMarkup, /Example Restaurant|87 \/ 200 audits used|AI Audit Report|losing ~53%|8\.4s load time/);
 });
 
 test('public contact enrichment keeps generic business inboxes and excludes person-named emails', () => {
