@@ -440,7 +440,7 @@ function renderPageSpeedReport(pageSpeed) {
   text($('pagespeed-metrics'), [metricText, pageSpeed.limitation].filter(Boolean).join(' — '));
 }
 async function initReports() {
-  if (!$('report-section')) return; text($('audit-date'), new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
+  if (!$('report-section')) return; text($('audit-date'), 'No report yet');
   const params = new URLSearchParams(location.search); const id = params.get('id'); const prefilledUrl = params.get('url'); const prefilledName = params.get('name');
   if (id) { const result = await leadApi('GET', `/${encodeURIComponent(id)}`); if (result.ok && result.data?.data) { selectedLead = normaliseLead(result.data.data); $('audit-url-input').value = selectedLead.url; document.querySelectorAll('.audit-business-name').forEach(node => text(node, selectedLead.name)); document.querySelectorAll('.audit-url').forEach(node => text(node, selectedLead.url)); scores(selectedLead.seoScore, selectedLead.speedScore, selectedLead.mobileScore); } }
   else if (prefilledUrl) { try { const safeUrl = normaliseWebsite(prefilledUrl); $('audit-url-input').value = safeUrl; document.querySelectorAll('.audit-business-name').forEach(node => text(node, prefilledName || safeUrl)); document.querySelectorAll('.audit-url').forEach(node => text(node, safeUrl)); } catch { Toast.warning('The selected discovery website was invalid. Enter a valid website URL to audit.'); } }

@@ -98,6 +98,7 @@ test('evidence-first report screen has no fabricated default audit, quota, or bu
   assert.match(reportMarkup, /id="pagespeed-panel"/);
   assert.match(runtime, /API\.post\('\/audit\/pagespeed'/);
   assert.match(runtime, /Heuristic website checks/);
+  assert.match(runtime, /text\(\$\('audit-date'\), 'No report yet'\)/);
   assert.doesNotMatch(reportMarkup, /Example Restaurant|87 \/ 200 audits used|AI Audit Report|losing ~53%|8\.4s load time/);
   assert.match(dashboardMarkup, /id="demo-disclosure"/);
   assert.match(dashboardMarkup, /Demo workspace:/);
