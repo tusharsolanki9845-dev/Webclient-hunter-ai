@@ -73,22 +73,27 @@ const Auth = {
 };
 
 const API = {
-  async request(method, path, body) {
+  async request(method, path, body, { timeoutMs = 12000 } = {}) {
     const base = apiBase();
     if (!base) return { ok: false, status: 0, data: null, error: 'The backend is not configured. Set the public API URL in Settings or runtime-config.js.' };
     const headers = { Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (Auth.token()) headers.Authorization = `Bearer ${Auth.token()}`;
+    const controller = new AbortController();
+    let timedOut = false;
+    const timeoutId = window.setTimeout(() => { timedOut = true; controller.abort(); }, timeoutMs);
     try {
-      const response = await fetch(`${base}/api${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+      const response = await fetch(`${base}/api${path}`, { method, headers, signal: controller.signal, body: body === undefined ? undefined : JSON.stringify(body) });
       const isJson = (response.headers.get('content-type') || '').includes('application/json');
       const payload = response.status === 204 ? null : (isJson ? await response.json() : null);
       if (response.status === 401) { Auth.clear(); Auth.clearDemo(); if (routeName() !== 'login') location.assign(loginTarget()); }
       return { ok: response.ok, status: response.status, data: payload, error: payload?.error || (response.ok ? '' : `Request failed (${response.status})`) };
-    } catch { return { ok: false, status: 0, data: null, error: 'The backend could not be reached.' }; }
+    } catch {
+      return { ok: false, status: 0, data: null, error: timedOut ? 'The business search took too long. Please retry or try a more specific area.' : 'The backend could not be reached.' };
+    } finally { window.clearTimeout(timeoutId); }
   },
-  get(path) { return this.request('GET', path); }, post(path, data) { return this.request('POST', path, data); },
-  patch(path, data) { return this.request('PATCH', path, data); }, delete(path) { return this.request('DELETE', path); },
+  get(path, options) { return this.request('GET', path, undefined, options); }, post(path, data, options) { return this.request('POST', path, data, options); },
+  patch(path, data, options) { return this.request('PATCH', path, data, options); }, delete(path, options) { return this.request('DELETE', path, undefined, options); },
 };
 
 const DEMO_LEADS = [
@@ -316,10 +321,26 @@ const SearchPage = {
     const button = $('discovery-search-btn'); const results = $('discovery-results'); const params = new URLSearchParams({ category, location, source });
     setBusy(button, true, 'Searching real businesses…'); results?.setAttribute('aria-busy', 'true');
     try {
-      const route = `/discovery${Auth.demo() ? '/demo' : ''}/search?${params}`; const result = await API.get(route);
-      if (!result.ok) return Toast.error('Business search could not run', result.error);
+      const route = `/discovery${Auth.demo() ? '/demo' : ''}/search?${params}`; const result = await API.get(route, { timeoutMs: 15000 });
+      if (!result.ok) {
+        this.renderDiscoveryProblem('Business search could not finish', result.error || 'Try again in a moment or use a more specific city or area.', { category, location, source });
+        return Toast.error('Business search could not run', result.error);
+      }
       this.renderDiscovery(result.data?.data || {});
     } finally { setBusy(button, false); results?.removeAttribute('aria-busy'); }
+  },
+  renderDiscoveryProblem(title, message, query) {
+    const section = $('discovery-results-section'), container = $('discovery-results'); if (!container) return;
+    section?.removeAttribute('hidden'); text($('discovery-results-count'), 'No new candidates were loaded. Your category and location are still ready to retry.'); text($('discovery-attribution'), '');
+    container.replaceChildren();
+    const state = tag('div', 'empty-state'); state.append(tag('h3', '', title), tag('p', '', message));
+    const retry = action('Retry search', 'btn btn-primary btn-sm', () => {
+      if ($('discovery-category')) $('discovery-category').value = query.category;
+      if ($('discovery-location')) $('discovery-location').value = query.location;
+      if ($('discovery-source')) $('discovery-source').value = query.source;
+      this.discover();
+    });
+    state.append(retry); container.appendChild(state);
   },
   renderDiscovery(payload) {
     const section = $('discovery-results-section'), container = $('discovery-results'); if (!container) return;

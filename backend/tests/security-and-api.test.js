@@ -75,6 +75,19 @@ test('free discovery uses bounded category queries and returns only safe public 
   assert.ok(NOMINATIM_MIN_INTERVAL_MS >= 1000);
 });
 
+test('public discovery has a finite timeout and a visible retryable failure state', async () => {
+  const [searchMarkup, runtime] = await Promise.all([
+    fs.readFile(path.resolve(__dirname, '../../frontend/search.html'), 'utf8'),
+    fs.readFile(path.resolve(__dirname, '../../frontend/js/main.js'), 'utf8'),
+  ]);
+  assert.match(searchMarkup, /id="discovery-results-section"/);
+  assert.match(runtime, /new AbortController\(\)/);
+  assert.match(runtime, /timeoutMs: 15000/);
+  assert.match(runtime, /Business search could not finish/);
+  assert.match(runtime, /Retry search/);
+  assert.match(runtime, /No new candidates were loaded/);
+});
+
 test('PageSpeed output stays source-labelled and separates Lighthouse evidence from a business verdict', () => {
   const report = normalisePageSpeedPayload({ lighthouseResult: {
     finalUrl: 'https://example.com/',
