@@ -88,6 +88,23 @@ test('public discovery has a finite timeout and a visible retryable failure stat
   assert.match(runtime, /No new candidates were loaded/);
 });
 
+test('prospecting workspace keeps discovery, evidence, and private-CRM boundaries clear across responsive layouts', async () => {
+  const [searchMarkup, styles] = await Promise.all([
+    fs.readFile(path.resolve(__dirname, '../../frontend/search.html'), 'utf8'),
+    fs.readFile(path.resolve(__dirname, '../../frontend/css/style.css'), 'utf8'),
+  ]);
+  assert.match(searchMarkup, /class="page-content prospect-page"/);
+  assert.match(searchMarkup, /Prospecting \/ evidence first/);
+  assert.match(searchMarkup, /Start a discovery/);
+  assert.match(searchMarkup, /Open your CRM/);
+  assert.match(searchMarkup, /How this workspace works/);
+  assert.match(searchMarkup, /Private workspace records/);
+  assert.match(searchMarkup, /OpenStreetMap · Free source/);
+  assert.match(styles, /\.app-layout\{display:block;min-height:100vh\}/);
+  assert.match(styles, /\.prospect-hero\{display:grid/);
+  assert.match(styles, /@media\(max-width:768px\)\{\.prospect-page/);
+});
+
 test('PageSpeed output stays source-labelled and separates Lighthouse evidence from a business verdict', () => {
   const report = normalisePageSpeedPayload({ lighthouseResult: {
     finalUrl: 'https://example.com/',

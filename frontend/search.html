@@ -40,22 +40,28 @@
 
   <div class="main-content">
     <header class="topbar">
-      <div class="topbar-left"><button class="sidebar-toggle" aria-label="Toggle sidebar">☰</button><span class="topbar-title">Prospect List</span></div>
+      <div class="topbar-left"><button class="sidebar-toggle" aria-label="Toggle sidebar">☰</button><span class="topbar-title">Prospecting workspace</span></div>
       <div class="topbar-right"><button class="dark-toggle" aria-label="Toggle theme">🌙</button></div>
     </header>
 
-    <main class="page-content">
-      <div class="page-header-row">
-        <div class="page-header">
-          <h1>Build your prospect list</h1>
-          <p>Choose a category and city or area to discover mapped businesses with public websites, then review source-labelled website checks before deciding whether any outreach is appropriate.</p>
+    <main class="page-content prospect-page">
+      <section class="prospect-hero" aria-labelledby="prospecting-title">
+        <div class="prospect-hero-copy">
+          <span class="eyebrow">Prospecting / evidence first</span>
+          <h1 id="prospecting-title">Build a better list.<br><span>Start with evidence.</span></h1>
+          <p>Find mapped businesses with public websites, run source-labelled website checks, and decide what belongs in your CRM. Nothing is contacted or saved until you choose it.</p>
+          <div class="prospect-hero-actions"><a href="#discovery-title" class="btn btn-primary">Start a discovery</a><a href="crm.html" class="btn btn-secondary">Open your CRM</a></div>
+          <p class="prospect-hero-note">Discovery uses public OpenStreetMap data. Coverage varies by area, so each result should be reviewed before outreach.</p>
         </div>
-        <a href="crm.html" class="btn btn-secondary btn-sm">📋 Open CRM</a>
-      </div>
+        <aside class="prospect-hero-guide" aria-label="Prospecting workflow summary">
+          <p class="eyebrow">How this workspace works</p>
+          <ol class="prospect-steps"><li><span>01</span><div><strong>Discover</strong><p>Search a category and location.</p></div></li><li><span>02</span><div><strong>Check</strong><p>Read visible evidence before saving.</p></div></li><li><span>03</span><div><strong>Decide</strong><p>Keep only prospects you want to qualify.</p></div></li></ol>
+        </aside>
+      </section>
 
-      <section class="glass-card discovery-workspace fade-in" aria-labelledby="discovery-title">
+      <section class="glass-card discovery-workspace prospect-panel fade-in" aria-labelledby="discovery-title">
         <div class="import-heading">
-          <div><span class="eyebrow">Free real-business search</span><h2 id="discovery-title">Choose who you want to find</h2><p>Search a category in a city or area using free OpenStreetMap business data. Results contain only businesses with a public website recorded in the source.</p></div>
+          <div><span class="eyebrow">Free real-business search</span><h2 id="discovery-title">Find website-ready businesses</h2><p>Choose a category and city or area. Results contain only businesses with a public website recorded in the map source.</p></div>
           <span class="source-pill">OpenStreetMap · Free source</span>
         </div>
         <form id="discovery-form" novalidate>
@@ -65,7 +71,7 @@
             <div class="form-group"><label for="discovery-source">Data source</label><select id="discovery-source" class="form-select"><option value="openstreetmap">OpenStreetMap — free</option></select></div>
             <button id="discovery-search-btn" type="submit" class="btn btn-primary">🔎 Search real businesses</button>
           </div>
-          <p class="input-help">The free source has variable coverage. Search results are limited and user-triggered; use the source link and audit findings to verify every prospect before outreach.</p>
+          <div class="discovery-form-footer"><p class="input-help">The free source has variable coverage. Searches are user-triggered and bounded; review the source link and audit findings before outreach.</p><a href="#saved-leads-title">Review saved prospects ↓</a></div>
         </form>
       </section>
 
@@ -74,7 +80,7 @@
         <div id="discovery-results" class="leads-grid" aria-live="polite"></div>
       </section>
 
-      <section class="glass-card import-workspace fade-in" aria-labelledby="import-title">
+      <section class="glass-card import-workspace prospect-panel fade-in" aria-labelledby="import-title">
         <div class="import-heading">
           <div><span class="eyebrow">Zero-cost lead intake</span><h2 id="import-title">Import businesses you want to qualify</h2><p>Paste rows from a spreadsheet or business directory, or upload a CSV. No paid lead-search API is required.</p></div>
           <button id="download-csv-template" type="button" class="btn btn-secondary btn-sm">⇩ Download CSV template</button>
@@ -94,16 +100,16 @@
         </form>
       </section>
 
-      <section class="workflow-strip" aria-label="How prospect qualification works">
+      <section class="workflow-strip workflow-strip-compact" aria-label="How prospect qualification works">
         <div><span class="workflow-number">1</span><strong>Discover</strong><span>Choose a category and area to find website-ready businesses.</span></div>
         <div><span class="workflow-number">2</span><strong>Check</strong><span>Run source-labelled website checks and review the public homepage.</span></div>
         <div><span class="workflow-number">3</span><strong>Review</strong><span>Interpret evidence with context rather than treating a score as a business verdict.</span></div>
         <div><span class="workflow-number">4</span><strong>Contact</strong><span>Review a tailored outreach draft before you send anything.</span></div>
       </section>
 
-      <section class="saved-leads-section" aria-labelledby="saved-leads-title">
-        <div class="section-heading-row"><div><span class="eyebrow">Your CRM</span><h2 id="saved-leads-title">Imported prospects and saved leads</h2><p>Filter your own records. This list never pretends to discover businesses automatically.</p></div></div>
-        <div class="glass-card search-box-wrap">
+      <section class="saved-leads-section prospect-crm" aria-labelledby="saved-leads-title">
+        <div class="section-heading-row"><div><span class="eyebrow">Your CRM</span><h2 id="saved-leads-title">Your saved prospects</h2><p>Filter only records you have chosen to import or save. This list never pretends to discover businesses automatically.</p></div><span class="crm-boundary-note">Private workspace records</span></div>
+        <div class="glass-card search-box-wrap prospect-filter-panel">
           <form id="saved-filter-form" novalidate>
             <div class="search-grid">
               <div class="form-group"><label for="niche-input">Filter by niche</label><input type="text" id="niche-input" class="form-input" placeholder="e.g. Restaurant"></div>
