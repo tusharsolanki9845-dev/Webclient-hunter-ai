@@ -1,5 +1,5 @@
-const CACHE_NAME = "webclient-hunter-pwa-v1";
-const APP_SHELL = ["/", "/index.html", "/css/style.css", "/js/main.js", "/js/pwa.js", "/manifest.json", "/assets/icon-192.png", "/assets/icon-512.png", "/assets/apple-touch-icon.png"];
+const CACHE_NAME = "webclient-hunter-pwa-v2";
+const APP_SHELL = ["/", "/index.html", "/css/style.css?v=20260822-prospect-ui", "/js/main.js", "/js/pwa.js", "/manifest.json", "/assets/icon-192.png", "/assets/icon-512.png", "/assets/apple-touch-icon.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => Promise.all(APP_SHELL.map((path) => cache.add(path).catch(() => undefined)))).then(() => self.skipWaiting()));
