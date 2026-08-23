@@ -2,11 +2,7 @@
 
 ## Completed Connection Work
 
-The disconnected-preview failure was traced to two placeholders in the local API runtime: the frontend had an empty `apiBase`, and the backend was pointed at `example.supabase.co`. The preview now uses the active Supabase project at `https://hyfkiejoacyythtsemgt.supabase.co` and the public project key. Its API is exposed for the current preview session at:
-
-```text
-https://3111-ii00mqw4ladji3c1zct8f-7233beab.us4.manus.computer
-```
+The disconnected-preview failure was traced to two placeholders in the local API runtime: the frontend had an empty `apiBase`, and the backend was pointed at `example.supabase.co`. The preview now uses the active Supabase project at `https://hyfkiejoacyythtsemgt.supabase.co` and the public project key. The temporary development endpoint is intentionally omitted because it is session-scoped and not a release target.
 
 The backend no longer depends on the invalid `SUPABASE_SERVICE_ROLE_KEY` placeholder. It validates each bearer token through Supabase Auth and creates a request-specific Supabase client carrying that user’s token. The database’s row-level-security policies enforce ownership of profiles, leads, audits, and outreach messages.
 

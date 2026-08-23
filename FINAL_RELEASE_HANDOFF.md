@@ -23,7 +23,7 @@ Configure the Render service with the following production values. Keep all secr
 | `ALLOWED_ORIGINS` | The exact final Vercel origin, for example `https://webclient-hunter-ai.vercel.app`. |
 | `OPENAI_API_KEY` | The server-only OpenAI key used for production outreach generation. |
 
-After Render has a stable HTTPS URL, set `frontend/runtime-config.js` to that API origin, deploy the `frontend` directory to Vercel, and set `ALLOWED_ORIGINS` to the final Vercel origin. Do not use the temporary Manus preview URL in production configuration.
+After Render has a stable HTTPS URL, set `frontend/runtime-config.js` to that API origin, deploy the `frontend` directory to Vercel, and set `ALLOWED_ORIGINS` to the final Vercel origin. Do not use a temporary development-preview URL in production configuration.
 
 ## Required OAuth Owner Actions
 

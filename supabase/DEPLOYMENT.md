@@ -13,7 +13,7 @@ Immediately run `verify.sql`. It returns the expected tables, index definitions,
 | `profiles` | Non-sensitive application profile metadata for each Supabase Auth user. |
 | `leads` | User-scoped CRM leads with status and score data. |
 | `audits` | Historical website-audit snapshots and finding arrays. |
-| `outreach_messages` | AI-generated outreach drafts and lifecycle status. |
+| `outreach_messages` | Automated outreach drafts and lifecycle status. |
 
 ## Configure Supabase Auth
 
